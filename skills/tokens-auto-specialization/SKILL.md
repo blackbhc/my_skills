@@ -91,6 +91,7 @@
 
 | 模型 | 适配策略 |
 |------|----------|
+| **DeepSeek (V3/R1)** | 中文优先；擅长长文本和复杂推理，可保留完整思维链；支持 system/user 角色区分；对结构化输出兼容性好，Markdown 和 JSON 均可 |
 | **豆包 / 国产模型** | 中文优先；简化思维链（避免过长 CoT 占用 token）；结构用标题/列表，避免复杂 JSON |
 | **GPT-4 / GPT-4o** | 可启用英文思维链；支持结构化 JSON 输出；可利用 system/user/assistant 角色区分 |
 | **Claude (Sonnet/Opus)** | XML 标签辅助结构化（`<task>` `<rules>` `<output>`）；善用 Claude 的长上下文和多轮对齐 |

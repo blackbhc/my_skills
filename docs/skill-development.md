@@ -1,6 +1,6 @@
 # Skill 开发指南
 
-本文档说明如何在 Kun 桌面应用中创建、编写和发布 Skill。
+本文档说明如何创建、编写和发布 LLM Skill。
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## 什么是 Skill
 
-Skill 是 Kun 桌面应用的**可复用指令集**。每个 Skill 是一个独立的 `SKILL.md` 文件，存放在 `skills/<skill-id>/` 目录下。当用户输入匹配 Skill 定义的触发器时，Kun 会将 Skill 的指令注入到 AI 的 system prompt 中，使 AI 表现出特定领域的专业能力。
+Skill 是**可复用的 LLM 指令集**。每个 Skill 是一个独立的 `SKILL.md` 文件，存放在 `skills/<skill-id>/` 目录下。当用户输入匹配 Skill 定义的触发器时，Skill 的指令可被注入到 LLM 的 system prompt 中，使模型表现出特定领域的专业能力。
 
 **Skill 的设计哲学：**
 - **单一职责** —— 一个 Skill 只做一件事
@@ -49,7 +49,7 @@ skills/
 # Skill: <skill-id>
 
 ## Metadata
-<!-- 元数据区：给 Kun 系统读取 -->
+<!-- 元数据区：给系统读取 -->
 
 ## Context
 <!-- 上下文：给人类开发者阅读，说明适用场景 -->
@@ -193,28 +193,18 @@ node tools/validate.mjs
 node tools/validate.mjs skills/my-skill/SKILL.md
 ```
 
-### 安装到 Kun
-
-```bash
-# 方法 1：符号链接（推荐，开发时方便更新）
-ln -sf "$PWD/skills/<skill-id>" ~/.agents/skills/<skill-id>
-
-# 方法 2：直接复制
-cp -r skills/<skill-id> ~/.agents/skills/<skill-id>
-```
-
 ### 测试方法
 
-1. **单元测试** —— 在 Kun 中触发 Skill，观察 AI 是否按预期行为
+1. **单元测试** —— 触发 Skill，观察 LLM 是否按预期行为
 2. **边界测试** —— 用极简输入、极长输入、不相关输入测试 Skill 是否正确激活或不激活
 3. **组合测试** —— 当多个 Skill 同时激活时，确认没有冲突
 4. **回归测试** —— 修改后重新运行验证，确保旧有行为不受影响
 
 ### 调试技巧
 
-- 在 Kun 中观察 AI 的完整 system prompt，确认 Skill 的指令是否被正确注入
+- 观察 LLM 的完整 system prompt，确认 Skill 的指令是否被正确注入
 - 如果 Skill 未激活，检查 `triggers` 是否覆盖了用户的表达方式
-- 如果 AI 行为异常，检查 `Instructions` 是否包含矛盾指令
+- 如果 LLM 行为异常，检查 `Instructions` 是否包含矛盾指令
 
 ---
 
@@ -222,7 +212,7 @@ cp -r skills/<skill-id> ~/.agents/skills/<skill-id>
 
 1. **开发** —— 从模板复制，按本指南编写
 2. **校验** —— `node tools/validate.mjs` 通过
-3. **自测** —— 安装到 Kun 本地验证
+3. **自测** —— 本地验证
 4. **提交 PR** —— 提交到本仓库
 5. **发布** —— 合并后发布 Release
 

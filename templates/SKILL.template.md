@@ -1,6 +1,6 @@
 # Skill: <your-skill-id>
 
-> **说明**：本文件是 Kun Skill 的标准模板。按以下结构填写即可创建一个新的 Skill。
+> **说明**：本文件是 LLM Skill 的标准模板。按以下结构填写即可创建一个新的 Skill。
 > 填写完成后运行 `node tools/validate.mjs` 自动校验格式。
 
 ---

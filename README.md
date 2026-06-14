@@ -1,6 +1,6 @@
-# Kun Skill 开发仓库
+# LLM Skill 开发仓库
 
-一套面向 [Kun 桌面应用](https://kun.llm) 的 Skill 开发框架与技能合集。
+一套面向大语言模型（LLM）应用的 Skill 开发框架与技能合集。
 
 ---
 
@@ -44,15 +44,18 @@ node tools/validate.mjs
 
 参见 [docs/skill-development.md](docs/skill-development.md) 获取完整开发指南。
 
-## 安装 Skill 到 Kun
+## 使用 Skill
 
-在 Kun 中使用的 Skill 需要放置到 Kun 的 skill 目录（通常在 `~/.agents/skills/`）下：
+每个 Skill 可通过以下方式使用：
 
 ```bash
-ln -sf "$PWD/skills/<skill-id>" ~/.agents/skills/<skill-id>
+# 1. 将 skill 目录复制/链接到你的项目中使用
+cp -r skills/<skill-id> /your-project/skills/<skill-id>
+
+# 2. 在对话中通过 @skill-id 或相关关键词激活 Skill
 ```
 
-重启 Kun 后即可在对话中通过 `@skill-id` 或相关触发器自动激活。
+详见 [docs/skill-development.md](docs/skill-development.md) 获取完整使用指南。
 
 ## 贡献
 

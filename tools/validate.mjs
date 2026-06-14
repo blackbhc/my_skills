@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Kun Skill 校验脚本
+ * LLM Skill 校验脚本
  *
  * 扫描 skills/ 下所有 SKILL.md，检查：
  * - 文件是否存在
@@ -149,7 +149,7 @@ if (specificFile) {
 
 // --- Report ---
 
-console.log("\n📋 Kun Skill 校验报告\n");
+console.log("\n📋 LLM Skill 校验报告\n");
 
 if (passes.length > 0) {
   console.log("✅ 通过：");

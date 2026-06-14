@@ -1,25 +1,21 @@
+---
+name: <your-skill-id>
+description: |
+  <一句话描述 skill 功能>
+
+  Use when: <触发词, 逗号分隔, 用户说什么时激活此 skill>
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - WebFetch
+---
+
 # Skill: <your-skill-id>
 
 > **说明**：本文件是 LLM Skill 的标准模板。按以下结构填写即可创建一个新的 Skill。
 > 填写完成后运行 `node tools/validate.mjs` 自动校验格式。
-
----
-
-## Metadata
-
-- **id**: `<your-skill-id>`
-  <!-- 唯一标识符。使用小写字母、数字、连字符，需与目录名一致。示例: code-review-skill -->
-- **name**: `<Skill 显示名称>`
-  <!-- 可选。中文名称，如"代码审查" -->
-- **description**: `<一句话描述>`
-  <!-- 简明扼要地说清这个 Skill 做什么。用户和 LLM 都会读取。示例: 自动审查代码质量，检测潜在 bug、安全风险和风格问题。 -->
-- **triggers**: `<触发词列表>`
-  <!-- 逗号分隔的触发词/短语。当用户输入包含这些词时，Skill 可能自动激活。
-       建议：包含英文和中文常见变体。示例: code review, 代码审查, review code, 审查代码, cr -->
-- **version**: `<semver 版本号>`
-  <!-- 可选。遵循 semver，如 1.0.0 -->
-- **author**: `<作者>`
-  <!-- 可选。你的名字或 ID -->
 
 ---
 
@@ -65,9 +61,9 @@ _在这里描述 Skill 的适用上下文。_
 
 ### 示例 1
 
-**用户说**：_\*用户输入示例_
+**用户说**：_用户输入示例_
 
-**Skill 应执行**：_\*预期的 LLM 响应行为_
+**Skill 应执行**：_预期的 LLM 响应行为_
 
 ---
 

@@ -1,15 +1,17 @@
-# Skill: tokens-auto-specialization
-
-## Metadata
-
-- **id**: `tokens-auto-specialization`
-- **name**: 提示词自动专业化
-- **description**: 用户只需给出使用场景+用途，自动补齐隐形需求、角色设定、规则约束、输出格式，输出精简通用版+高阶顶配版两个版本，跨模型适配豆包、GPT、Claude 等主流 AI 模型
-- **triggers**: `提示词, prompt, 提示工程, prompt engineering, 写prompt, 优化提示词, 提示词架构, 提示词优化, 场景, 用途, 帮我写提示词, 帮我写个prompt, 提示词设计, 提示词生成, write a prompt, create a prompt, optimize prompt`
-- **version**: `1.0.0`
-- **author**: `LLM Skill 框架`
-
 ---
+name: tokens-auto-specialization
+description: |
+  提示词自动专业化——用户只需给出使用场景+用途，自动补齐隐形需求、角色设定、规则约束、输出格式，输出精简通用版+高阶顶配版两个版本，跨模型适配 DeepSeek、豆包、GPT、Claude 等主流 AI 模型。
+
+  Use when: 用户描述场景并需要 prompt, 帮我写提示词, 帮我写prompt, 提示工程, 优化提示词, 提示词架构, 提示词设计, 提示词生成, 写prompt, write a prompt, create a prompt, optimize prompt, prompt engineering, 场景, 用途
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - WebFetch
+---
+
+# Skill: tokens-auto-specialization
 
 ## Context
 

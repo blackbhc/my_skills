@@ -38,31 +38,59 @@ function pass(msg) {
 }
 
 /**
- * Parse metadata block from SKILL.md content.
- * Assumes the block starts after "## Metadata" heading and continues
- * as lines like "- **key**: `value`" until next heading.
+ * Parse YAML frontmatter from SKILL.md content.
+ * The frontmatter is between `---` markers at the very beginning of the file.
+ * Returns a flat meta object with extracted fields.
  */
 function parseMetadata(content, filePath) {
   const meta = {};
 
-  // Find the Metadata section
-  const metaMatch = content.match(/^## Metadata\s*\n([\s\S]*?)(?=^## )/m);
-  if (!metaMatch) {
-    error(`[${filePath}] 缺少 "## Metadata" 章节`);
+  // Match YAML frontmatter between --- markers
+  const fmMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n/);
+  if (!fmMatch) {
+    error(`[${filePath}] 缺少 YAML frontmatter（须以 --- 开头）`);
     return meta;
   }
 
-  const block = metaMatch[1];
-  // Match backtick-wrapped values first, then plain text (until end of line or comment)
-  const fieldRegex = /^- \*\*(\w+)\*\*:\s*(?:`([^`]*)`|(.+?)(?:\s*<!--.*?-->)?\s*$)/gm;
-  let match;
+  const yamlBlock = fmMatch[1];
+  let currentKey = null;
+  let currentValue = [];
 
-  while ((match = fieldRegex.exec(block)) !== null) {
-    // match[2] = backtick value, match[3] = plain text value
-    const value = (match[2] !== undefined ? match[2] : match[3]).trim();
-    if (value) {
-      meta[match[1]] = value;
+  const lines = yamlBlock.split("\n");
+
+  for (const rawLine of lines) {
+    // Skip empty lines in the middle of a value block
+    const line = rawLine.trimEnd();
+
+    // Check for top-level key: value or key: |
+    const topLevelMatch = line.match(/^(\w+):\s*(.*)/);
+    if (topLevelMatch) {
+      // Save previous multi-line value if any
+      if (currentKey && currentValue.length > 0) {
+        meta[currentKey] = currentValue.join("\n").trim();
+        currentValue = [];
+      }
+
+      currentKey = topLevelMatch[1];
+      const rest = topLevelMatch[2];
+
+      if (rest === "|") {
+        // Multi-line value follows (indented lines)
+        currentValue = [];
+      } else {
+        // Single-line value
+        meta[currentKey] = rest.trim();
+        currentKey = null;
+      }
+    } else if (currentKey && currentValue !== null) {
+      // Continuation of multi-line value (indented with spaces)
+      currentValue.push(line);
     }
+  }
+
+  // Flush last multi-line value
+  if (currentKey && currentValue.length > 0) {
+    meta[currentKey] = currentValue.join("\n").trim();
   }
 
   return meta;
@@ -84,18 +112,23 @@ function validateSingleSkill(skillDir, label) {
   const meta = parseMetadata(content, fileLabel);
 
   // Required fields
-  const requiredFields = ["id", "description", "triggers"];
+  const requiredFields = ["name", "description"];
   for (const field of requiredFields) {
     if (!meta[field] || meta[field].trim() === "") {
       error(`[${fileLabel}] 缺少必需元数据字段: ${field}`);
     }
   }
 
-  // id should match directory name (skip for template files)
-  if (meta.id && !isFile && meta.id !== label) {
-    error(`[${fileLabel}] id ("${meta.id}") 与目录名 ("${label}") 不一致`);
-  } else if (meta.id && !isFile) {
-    pass(`[${fileLabel}] id 与目录名一致 ✓`);
+  // Check description contains "Use when:" for trigger words
+  if (meta.description && !meta.description.includes("Use when:")) {
+    error(`[${fileLabel}] description 中缺少 "Use when:" 触发词定义`);
+  }
+
+  // name should match directory name (skip for template files)
+  if (meta.name && !isFile && meta.name !== label) {
+    error(`[${fileLabel}] name ("${meta.name}") 与目录名 ("${label}") 不一致`);
+  } else if (meta.name && !isFile) {
+    pass(`[${fileLabel}] name 与目录名一致 ✓`);
   }
 }
 

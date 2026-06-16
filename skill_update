@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================
+# skill_update — 拉取/更新外部 GitHub skills
+# 将远程 skills 克隆到 ~/.agents/skills/
+# ==========================================
+
+TARGET="${HOME}/.agents/skills"
+
+# ---- 外部 skill 列表（格式: "目录名|git地址"） ----
+EXTERNAL_SKILLS=(
+  "code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
+)
+
+# ---- 更新 ----
+echo "==> 部署目标: ${TARGET}"
+mkdir -p "${TARGET}"
+
+for entry in "${EXTERNAL_SKILLS[@]}"; do
+  NAME="${entry%%|*}"
+  URL="${entry##*|}"
+  DST="${TARGET}/${NAME}"
+
+  if [[ -d "${DST}/.git" ]]; then
+    echo "[UPD] ${NAME}"
+    git -C "${DST}" pull --ff-only
+  else
+    echo "[CLN] ${NAME}"
+    rm -rf "${DST}"
+    git clone "${URL}" "${DST}"
+  fi
+done
+
+echo "==> 完成，已处理 ${#EXTERNAL_SKILLS[@]} 个外部 skill"

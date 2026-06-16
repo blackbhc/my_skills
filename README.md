@@ -11,6 +11,8 @@ my_skills/
 ├── skill_builder/           # Skill 开发助手（指导如何创建和优化 Skill）
 ├── tokens-auto-specialization/  # 提示词自动专业化
 ├── templates/               # Skill 模板
+├── setup                    # 部署本地 skills
+├── skill_update             # 拉取/更新外部 GitHub skills
 ├── tools/                   # 校验与开发工具
 └── docs/                    # 开发指南
 ```
@@ -52,14 +54,25 @@ node tools/validate.mjs
 
 ## 使用 Skill
 
-每个 Skill 可通过以下方式使用：
+### 部署本地 Skill
 
 ```bash
-# 1. 将 skill 目录复制/链接到 ~/.agents/skills/ 目录下
-cp -r <skill-id> ~/.agents/skills/<skill-id>
-
-# 2. 在对话中通过触发词自动激活 Skill（无需手动 @）
+./setup    # 部署 skill_builder 和 tokens-auto-specialization
 ```
+
+### 拉取外部 Skill
+
+```bash
+./skill_update    # 拉取/更新 GitHub 上的外部 skills（如 code-review-skill）
+```
+
+### 手动安装
+
+```bash
+cp -r <skill-id> ~/.agents/skills/<skill-id>
+```
+
+部署后在对话中通过触发词自动激活，无需手动 @。
 
 详见 [docs/skill-development.md](docs/skill-development.md) 获取完整使用指南。
 

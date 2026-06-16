@@ -1,2 +1,35 @@
-#! /usr/bin/env bash
-cp -r ./skills/* $HOME/.agents/skills/
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================
+# my_skills 部署脚本
+# 将本仓库中的 skills 部署到 ~/.agents/skills/
+# ==========================================
+
+TARGET="${HOME}/.agents/skills"
+
+# ---- 独立 skills 列表（新增 skill 时在这里加一行即可） ----
+SKILLS=(
+  skill_builder
+  tokens-auto-specialization
+)
+
+# ---- 部署 ----
+echo "==> 部署目标: ${TARGET}"
+mkdir -p "${TARGET}"
+
+for skill in "${SKILLS[@]}"; do
+  SRC="$(cd "$(dirname "$0")" && pwd)/${skill}"
+  DST="${TARGET}/${skill}"
+
+  if [[ ! -d "${SRC}" ]]; then
+    echo "[SKIP] ${skill} — 源目录不存在: ${SRC}"
+    continue
+  fi
+
+  echo "[ OK ] ${skill}"
+  rm -rf "${DST}"
+  cp -r "${SRC}" "${DST}"
+done
+
+echo "==> 完成，已部署 ${#SKILLS[@]} 个 skill"

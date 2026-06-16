@@ -29,7 +29,10 @@ my_skills/
 git clone <repo-url> my_skills
 cd my_skills
 
-# 2. 校验已安装的 skill
+# 2. 部署 skills 到 ~/.agents/skills/
+./setup
+
+# 3. 校验
 node tools/validate.mjs
 ```
 

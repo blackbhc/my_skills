@@ -1,3 +1,19 @@
+---
+name: skill_builder
+description: |
+  Skill 开发助手——指导 Agent 设计、开发、重构、优化和维护其他 Skill。确保产出的 Skill 格式规范（含 YAML frontmatter）、可被系统自动发现和加载。
+
+  Use when: 创建skill, 开发skill, 优化skill, skill设计, 构建skill, 重建skill, 写skill, 设计工作流, agent能力, 工作流设计, prompt转skill, 构建工具链, 自动化流程, skill格式, skill规范, 制作skill, create skill, develop skill, build skill, design skill, optimize skill, skill development, 改写skill
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Grep
+  - Glob
+  - WebFetch
+---
+
 # Skill Builder（Skill开发助手）
 
 ## Purpose
@@ -47,6 +63,56 @@
 - 示例充分
 - 易于维护
 - 易于被 Agent 自动发现和调用
+- **格式规范：必须包含 YAML frontmatter（见下方「YAML Frontmatter 规范」）**
+
+---
+
+# YAML Frontmatter 规范（★ 硬性要求）
+
+**每一个 Skill 的 SKILL.md 文件必须以 YAML frontmatter 开头。** 缺少 frontmatter 的 Skill 无法被系统扫描和加载，等于不存在。
+
+## 格式
+
+```yaml
+---
+name: <skill-id>                          # 必需。小写字母、数字、连字符。必须与目录名一致
+description: |                            # 必需。多行描述
+  <一句话描述 skill 功能>
+
+  Use when: <触发词1, 触发词2, ...>       # ★ 必需。写在这一行，逗号分隔
+allowed-tools:                            # 必需。本 skill 需要使用的工具列表
+  - Read
+  - Write
+  - Bash
+---
+```
+
+## 各字段说明
+
+| 字段 | 必需 | 格式 | 示例 |
+|------|:----:|------|------|
+| `name` | ✅ | 小写字母+数字+连字符，与目录名一致 | `code-review-skill` |
+| `description` | ✅ | 多行文本。第一行是一句话描述。**必须包含一行 `Use when:`** 后跟逗号分隔的触发词 | `Use when: 审查代码, code review, 代码质量` |
+| `allowed-tools` | ✅ | YAML 列表，声明本 skill 运行时需要的工具 | `- Read` `- Bash` `- Grep` |
+
+## 常见错误
+
+| 错误 | 后果 | 正确做法 |
+|------|------|----------|
+| 没有 `---` 包裹的 YAML 块 | Skill 不被发现 | 文件第一行必须是 `---` |
+| `description` 中没有 `Use when:` 行 | 无法匹配触发词 | 在 description 中显式写 `Use when: xxx, yyy` |
+| `name` 与目录名不一致 | 校验失败 | 目录名和 name 字段保持严格一致 |
+| `---` 只出现在开头缺了结尾 | YAML 解析失败 | frontmatter 必须以第二个 `---` 闭合 |
+
+## 在校验环节确认
+
+Phase 8（质量检查）中，你必须确认产出的 SKILL.md：
+
+- [ ] 文件前 3 行是否以 `---` 开头？
+- [ ] `name` 是否与目录名一致？
+- [ ] `description` 中是否包含 `Use when:` 行？
+- [ ] `allowed-tools` 是否声明了 skill 需要的工具？
+- [ ] frontmatter 是否被第二个 `---` 正确闭合？
 
 ---
 
@@ -69,7 +135,7 @@
 - academic-assistant
 - all-in-one-agent
 
-如果一个 Skill 需要用“以及”、“同时”、“顺便”等词描述其职责，则通常说明职责过多。
+如果一个 Skill 需要用「以及」「同时」「顺便」等词描述其职责，则通常说明职责过多。
 
 ---
 
@@ -174,32 +240,55 @@ Skill 必须产生确定结果。
 
 ```text
 skill-name/
-├── README.md
-├── examples/
-├── templates/
-└── references/
+├── SKILL.md          # ★ 唯一必需文件（含 YAML frontmatter）
+├── README.md         # 可选：人类阅读的说明文档
+├── examples/         # 可选：示例
+├── templates/        # 可选：模板
+└── references/       # 可选：参考资料
 ```
 
-README 应包含：
+**SKILL.md 必须包含的结构：**
 
 ```markdown
-# Skill Name
+---
+name: <skill-id>
+description: |
+  <一句话描述>
+
+  Use when: <触发词列表>
+allowed-tools:
+  - Read
+  - Write
+---
+
+# Skill: <skill-id>
 
 ## Purpose
+一句话说明用途。
 
 ## Use When
+列出触发条件。
 
 ## Inputs
+所需输入。
 
 ## Workflow
+步骤1
+步骤2
+步骤3
 
 ## Outputs
+输出内容。
 
 ## Limitations
+不负责什么。
 
 ## Examples
+示例1
+示例2
 
 ## Checklist
+质量检查项。
 ```
 
 ---
@@ -357,13 +446,69 @@ README 应包含：
 
 确认：
 
-- 目标明确
-- 触发条件明确
-- 输入明确
-- 输出明确
-- 边界明确
-- 示例充分
-- 无明显歧义
+- [ ] 目标明确
+- [ ] 触发条件明确
+- [ ] 输入明确
+- [ ] 输出明确
+- [ ] 边界明确
+- [ ] 示例充分
+- [ ] 无明显歧义
+
+---
+
+# YAML Frontmatter 生成流程（★ 新增）
+
+在产出任何 Skill 时，你必须按以下步骤生成 YAML frontmatter：
+
+## Step 1：确定 name
+
+`name` 必须等于 Skill 所在目录名。格式：小写字母 + 数字 + 连字符。
+
+```
+正确：code-review-skill
+正确：tokens-auto-specialization
+错误：Code Review Skill
+错误：code_review_skill
+```
+
+## Step 2：撰写 description
+
+第一行：一句话描述。
+第二行：空行。
+第三行：`Use when: <触发词1>, <触发词2>, ...`
+
+触发词来源：Phase 3 中设计的调用条件，提取关键词，逗号分隔。
+
+```
+Use when: 审查代码, code review, 代码质量, review PR, 检查代码
+```
+
+触发词设计原则：
+- 覆盖中英文常见变体
+- 优先「动词+名词」组合
+- 避免过度泛化（如「代码」「测试」等单一名词）
+
+## Step 3：声明 allowed-tools
+
+列出本 Skill 运行时需要调用的工具名称：
+
+```yaml
+allowed-tools:
+  - Read
+  - Bash
+  - Grep
+```
+
+如果不确定，至少包含 `Read`。
+
+## Step 4：组装并校验
+
+将以上三步组装为完整的 YAML frontmatter，用 `---` 包裹，放在 SKILL.md 第一行。
+
+校验清单：
+- [ ] `name` 与目录名一致？
+- [ ] `description` 包含 `Use when:` 行？
+- [ ] 第二个 `---` 正确闭合？
 
 ---
 
@@ -466,7 +611,7 @@ Phase 2
 输出：
 
 ```text
-最终Skill
+最终Skill（含 YAML frontmatter）
 使用说明
 示例
 限制说明
@@ -480,7 +625,18 @@ Phase 2
 开发任何 Skill 时，优先生成以下内容。
 
 ```markdown
-# Skill Name
+---
+name: <skill-id>
+description: |
+  <一句话描述>
+
+  Use when: <触发词1, 触发词2, ...>
+allowed-tools:
+  - Read
+  - Write
+---
+
+# Skill: <skill-id>
 
 ## Purpose
 
@@ -497,9 +653,7 @@ Phase 2
 ## Workflow
 
 步骤1
-
 步骤2
-
 步骤3
 
 ## Outputs
@@ -513,7 +667,6 @@ Phase 2
 ## Examples
 
 示例1
-
 示例2
 
 ## Checklist
@@ -525,35 +678,35 @@ Phase 2
 
 # Good Example
 
-## Purpose
+```markdown
+---
+name: paper-polish
+description: |
+  帮助润色天体物理论文，使其符合 ApJ 风格。
 
-帮助润色天体物理论文，使其符合 ApJ 风格。
+  Use when: 学术英语润色, ApJ风格修改, 论文润色, referee回复优化, 学术写作
+allowed-tools:
+  - Read
+  - Write
+---
 
-## Use When
-
-用户要求：
-
-- 学术英语润色
-- ApJ风格修改
-- referee回复优化
-
-## Outputs
-
-- 修改后文本
-- 修改原因
-- 语言问题清单
+# Skill: paper-polish
+...
+```
 
 ---
 
 # Bad Example
 
-## Purpose
-
-帮助科研。
+```markdown
+# Skill: research-helper
+...
+```
 
 问题：
 
-- 范围过大
+- **缺少 YAML frontmatter** —— 系统无法发现此 Skill
+- 范围过大（「帮助科研」）
 - 无触发条件
 - 无边界说明
 - 无输出规范
@@ -574,3 +727,4 @@ Phase 2
 8. Skill 应包含示例，而非仅包含规则。
 9. Skill 应优先复用成熟模式，而非重复发明流程。
 10. 如果无法一句话说明用途，则说明 Skill 设计仍不够清晰。
+11. **★ 每个 Skill 的 SKILL.md 必须以 YAML frontmatter（`---` 包裹的 name/description/allowed-tools）开头，否则系统无法发现和加载。**

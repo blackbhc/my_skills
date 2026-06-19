@@ -4,32 +4,129 @@ set -euo pipefail
 # ==========================================
 # skill_update — 拉取/更新外部 GitHub skills
 # 将远程 skills 克隆到 ~/.agents/skills/
+#
+# 条目格式:
+#   single|目录名|git地址
+#     整个仓库就是一个 skill，直接克隆到目标
+#
+#   multi|目录名|git地址|相对路径
+#     仓库内有多个 skill，只复制指定子目录
+#     例如: multi|brainstorming|https://github.com/obra/superpowers.git|skills/brainstorming
 # ==========================================
 
 TARGET="${HOME}/.agents/skills"
+CACHE="${HOME}/.agents/.skill_cache"
 
-# ---- 外部 skill 列表（格式: "目录名|git地址"） ----
-EXTERNAL_SKILLS=(
-    "code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
+# ---- 外部 skill 列表 ----
+SKILLS=(
+    # ---- 单 skill 仓库 ----
+    "single|code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
+
+    # ---- obra/superpowers（多 skill 仓库） ----
+    "multi|brainstorming|https://github.com/obra/superpowers.git|skills/brainstorming"
+    "multi|dispatching-parallel-agents|https://github.com/obra/superpowers.git|skills/dispatching-parallel-agents"
+    "multi|executing-plans|https://github.com/obra/superpowers.git|skills/executing-plans"
+    "multi|find-skills|https://github.com/obra/superpowers.git|skills/find-skills"
+    "multi|finishing-a-development-branch|https://github.com/obra/superpowers.git|skills/finishing-a-development-branch"
+    "multi|receiving-code-review|https://github.com/obra/superpowers.git|skills/receiving-code-review"
+    "multi|requesting-code-review|https://github.com/obra/superpowers.git|skills/requesting-code-review"
+    "multi|subagent-driven-development|https://github.com/obra/superpowers.git|skills/subagent-driven-development"
+    "multi|systematic-debugging|https://github.com/obra/superpowers.git|skills/systematic-debugging"
+    "multi|test-driven-development|https://github.com/obra/superpowers.git|skills/test-driven-development"
+    "multi|using-git-worktrees|https://github.com/obra/superpowers.git|skills/using-git-worktrees"
+    "multi|using-superpowers|https://github.com/obra/superpowers.git|skills/using-superpowers"
+    "multi|verification-before-completion|https://github.com/obra/superpowers.git|skills/verification-before-completion"
+    "multi|writing-plans|https://github.com/obra/superpowers.git|skills/writing-plans"
+
+    # ---- anthropics/skills（多 skill 仓库） ----
+    "multi|frontend-design|https://github.com/anthropics/skills.git|skills/frontend-design"
+    "multi|docx|https://github.com/anthropics/skills.git|skills/docx"
+    "multi|pdf|https://github.com/anthropics/skills.git|skills/pdf"
+    "multi|pptx|https://github.com/anthropics/skills.git|skills/pptx"
+    "multi|xlsx|https://github.com/anthropics/skills.git|skills/xlsx"
+
+    # ---- vercel-labs/agent-skills（多 skill 仓库） ----
+    "multi|web-design-guidelines|https://github.com/vercel-labs/agent-skills.git|skills/web-design-guidelines"
 )
 
-# ---- 更新 ----
-echo "==> 部署目标: ${TARGET}"
-mkdir -p "${TARGET}"
+# ---- 函数：更新单 skill 仓库 ----
+update_single() {
+    local name="$1" url="$2" dst="${TARGET}/${name}"
 
-for entry in "${EXTERNAL_SKILLS[@]}"; do
-    NAME="${entry%%|*}"
-    URL="${entry##*|}"
-    DST="${TARGET}/${NAME}"
-
-    if [[ -d "${DST}/.git" ]]; then
-        echo "[UPD] ${NAME}"
-        git -C "${DST}" pull --ff-only
+    if [[ -d "${dst}/.git" ]]; then
+        echo "[UPD] ${name}"
+        git -C "${dst}" pull --ff-only 2>/dev/null || echo "  └─ 更新失败（网络问题），使用已有版本"
     else
-        echo "[CLN] ${NAME}"
-        rm -rf "${DST}"
-        git clone "${URL}" "${DST}" --depth=1
+        echo "[CLN] ${name}"
+        rm -rf "${dst}"
+        git clone "${url}" "${dst}" --depth=1 2>/dev/null || {
+            echo "  └─ 克隆失败（网络问题），跳过 ${name}"
+            return
+        }
     fi
+}
+
+# ---- 函数：从多 skill 仓库复制指定 skill ----
+update_multi() {
+    local name="$1" url="$2" subpath="$3"
+    local dst="${TARGET}/${name}"
+
+    # 生成缓存目录名（基于仓库 URL）
+    local cache_name
+    cache_name=$(echo "${url}" | sed 's|https://github.com/||; s|\.git$||; s|/|_|g')
+    local cache_dir="${CACHE}/${cache_name}"
+
+    # 克隆/更新缓存仓库
+    if [[ -d "${cache_dir}/.git" ]]; then
+        echo "[SYNC] ${cache_name}"
+        git -C "${cache_dir}" pull --ff-only --depth=1 2>/dev/null || echo "  └─ 更新失败（网络问题），使用已有缓存"
+    else
+        echo "[CLONE] ${cache_name}"
+        rm -rf "${cache_dir}"
+        git clone "${url}" "${cache_dir}" --depth=1 2>/dev/null || {
+            echo "  └─ 克隆失败（网络问题），跳过 ${name}"
+            return
+        }
+    fi
+
+    # 从缓存复制指定 skill
+    local src="${cache_dir}/${subpath}"
+    if [[ ! -d "${src}" ]]; then
+        echo "[SKIP] ${name} — 子路径不存在: ${subpath}"
+        return
+    fi
+
+    echo "[COPY] ${name}"
+    rm -rf "${dst}"
+    cp -r "${src}" "${dst}"
+}
+
+# ---- 主流程 ----
+echo "==> 部署目标: ${TARGET}"
+mkdir -p "${TARGET}" "${CACHE}"
+
+typeset -i total=0 success=0
+
+for entry in "${SKILLS[@]}"; do
+    IFS='|' read -r type name url subpath <<< "${entry}" || true
+
+    case "${type}" in
+        single)
+            total+=1
+            if update_single "${name}" "${url}"; then
+                success+=1
+            fi
+            ;;
+        multi)
+            total+=1
+            if update_multi "${name}" "${url}" "${subpath}"; then
+                success+=1
+            fi
+            ;;
+        *)
+            echo "[WARN] 未知类型: ${type}"
+            ;;
+    esac
 done
 
-echo "==> 完成，已处理 ${#EXTERNAL_SKILLS[@]} 个外部 skill"
+echo "==> 完成: ${success}/${total} 个 skill 部署成功"

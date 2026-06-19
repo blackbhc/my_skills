@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================
+# mcp_setup — 安装/更新 MCP Servers
+# 将 MCP server 配置添加到 ~/.kun/mcp.json
+#
+# 安装方式:
+#   npx  →  npx -y <package> [args...]
+#   uvx  →  uvx <package> [args...]
+#   bin  →  本地可执行文件路径
+#
+# 格式: enabled|name|transport|command|args|timeout
+#   args: 用逗号分隔
+#   timeout: 毫秒
+# ==========================================
+
+MCP_CONFIG="${HOME}/.kun/mcp.json"
+
+# ---- MCP Server 列表（新增一行即可添加新 server） ----
+SERVERS=(
+    "true|sequential-thinking|stdio|npx|-y,@modelcontextprotocol/server-sequential-thinking|30000"
+    "true|memory|stdio|npx|-y,@modelcontextprotocol/server-memory|30000"
+    "true|filesystem|stdio|npx|-y,@modelcontextprotocol/server-filesystem,/Users/chenbinhui/Desktop|30000"
+    "true|git|stdio|uvx|mcp-server-git|30000"
+    "true|chrome-devtools|stdio|npx|-y,chrome-devtools-mcp@latest,--no-usage-statistics|120000"
+    "true|arxiv|stdio|bin|arxiv-mcp-server|60000"
+)
+
+# ---- Python 合并脚本 ----
+PY_MERGE=$(cat << 'PYEOF'
+import json, sys, shutil
+
+def merge():
+    mcp_file = sys.argv[1]
+    server_defs = sys.argv[2:]
+
+    # 读取已有配置
+    try:
+        with open(mcp_file) as f:
+            cfg = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        cfg = {}
+
+    if "servers" not in cfg:
+        cfg["servers"] = {}
+    if "timeouts" not in cfg:
+        cfg["timeouts"] = {"connect_timeout": 10, "execute_timeout": 60, "read_timeout": 120}
+
+    for entry in server_defs:
+        parts = entry.split("|")
+        if len(parts) < 4:
+            continue
+        enabled, name, transport, command = parts[0], parts[1], parts[2], parts[3]
+        args_str = parts[4] if len(parts) > 4 else ""
+        timeout = int(parts[5]) if len(parts) > 5 else 30000
+
+        args = [a for a in args_str.split(",") if a] if args_str else []
+
+        data = {
+            "enabled": enabled == "true",
+            "transport": transport,
+            "command": command,
+            "args": args,
+            "env": {},
+            "trustScope": "user",
+            "timeoutMs": timeout
+        }
+
+        if command == "bin" and args:
+            resolved = shutil.which(args[0])
+            if resolved:
+                data["command"] = resolved
+            data["args"] = []
+
+        cfg["servers"][name] = data
+
+    print(json.dumps(cfg, indent=2, ensure_ascii=False))
+
+merge()
+PYEOF
+)
+
+# ---- 主流程 ----
+echo "==> MCP 配置文件: ${MCP_CONFIG}"
+echo ""
+
+# 备份已有配置
+if [[ -f "${MCP_CONFIG}" ]]; then
+    cp "${MCP_CONFIG}" "${MCP_CONFIG}.bak"
+    echo "[BACKUP] ${MCP_CONFIG}.bak"
+fi
+
+# 合并并写入
+# 写入临时文件再替换（避免 shell 重定向截断输入文件）
+mkdir -p "$(dirname "${MCP_CONFIG}")"
+tmpfile=$(mktemp)
+python3 -c "${PY_MERGE}" "${MCP_CONFIG}" "${SERVERS[@]}" > "${tmpfile}"
+mv "${tmpfile}" "${MCP_CONFIG}"
+
+echo ""
+echo "==> 完成! 共 ${#SERVERS[@]} 个 MCP server 已配置"
+echo ""
+echo "安装验证（检查依赖是否可用）:"
+for entry in "${SERVERS[@]}"; do
+    IFS='|' read -r enabled name transport command arg_str timeout <<< "${entry}" || true
+    if [ "$command" = "npx" ]; then
+        pkg=$(echo "$arg_str" | cut -d',' -f2)
+        echo "  ${name}: npx ${pkg}"
+    elif [ "$command" = "uvx" ]; then
+        echo "  ${name}: uvx ${arg_str}"
+    elif [ "$command" = "bin" ]; then
+        bin_name=$(echo "$arg_str" | cut -d',' -f1)
+        if command -v "$bin_name" &>/dev/null; then
+            echo "  ${name}: ✅ $(command -v $bin_name)"
+        else
+            echo "  ${name}: ⚠️  $bin_name 未安装，需要手动安装"
+        fi
+    fi
+done

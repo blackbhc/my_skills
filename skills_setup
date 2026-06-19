@@ -26,7 +26,6 @@ SKILLS=(
     "multi|brainstorming|https://github.com/obra/superpowers.git|skills/brainstorming"
     "multi|dispatching-parallel-agents|https://github.com/obra/superpowers.git|skills/dispatching-parallel-agents"
     "multi|executing-plans|https://github.com/obra/superpowers.git|skills/executing-plans"
-    "multi|find-skills|https://github.com/obra/superpowers.git|skills/find-skills"
     "multi|finishing-a-development-branch|https://github.com/obra/superpowers.git|skills/finishing-a-development-branch"
     "multi|receiving-code-review|https://github.com/obra/superpowers.git|skills/receiving-code-review"
     "multi|requesting-code-review|https://github.com/obra/superpowers.git|skills/requesting-code-review"
@@ -105,31 +104,53 @@ update_multi() {
 }
 
 # ---- 主流程 ----
-echo "==> 部署目标: ${TARGET}"
+echo "==> 部署目标: ${TARGET}（本地 + 外部）"
 mkdir -p "${TARGET}" "${CACHE}"
 
 typeset -i total=0 success=0
 
 for entry in "${SKILLS[@]}"; do
-    IFS='|' read -r type name url subpath <<< "${entry}" || true
+    IFS='|' read -r type name url subpath <<<"${entry}" || true
 
     case "${type}" in
-        single)
-            total+=1
-            if update_single "${name}" "${url}"; then
-                success+=1
-            fi
-            ;;
-        multi)
-            total+=1
-            if update_multi "${name}" "${url}" "${subpath}"; then
-                success+=1
-            fi
-            ;;
-        *)
-            echo "[WARN] 未知类型: ${type}"
-            ;;
+    single)
+        total+=1
+        if update_single "${name}" "${url}"; then
+            success+=1
+        fi
+        ;;
+    multi)
+        total+=1
+        if update_multi "${name}" "${url}" "${subpath}"; then
+            success+=1
+        fi
+        ;;
+    *)
+        echo "[WARN] 未知类型: ${type}"
+        ;;
     esac
 done
 
 echo "==> 完成: ${success}/${total} 个 skill 部署成功"
+
+# ---- 本地 skill 部署（从仓库根目录复制到 ~/.agents/skills/） ----
+MY_SKILLS=(
+    skill_builder
+    tokens-auto-specialization
+)
+
+for skill in "${MY_SKILLS[@]}"; do
+    SRC="$(cd "$(dirname "$0")" && pwd)/${skill}"
+    DST="${TARGET}/${skill}"
+
+    if [[ ! -d "${SRC}" ]]; then
+        echo "[SKIP] ${skill} — 源目录不存在: ${SRC}"
+        continue
+    fi
+
+    echo "[OK] ${skill}"
+    rm -rf "${DST}"
+    cp -r "${SRC}" "${DST}"
+done
+
+echo "==> 完成，已部署 ${#MY_SKILLS[@]} 个本地 skill + ${success}/${total} 个外部 skill"

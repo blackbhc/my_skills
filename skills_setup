@@ -47,6 +47,9 @@ SKILLS=(
     # ---- vercel-labs/agent-skills（多 skill 仓库） ----
     "multi|web-design-guidelines|https://github.com/vercel-labs/agent-skills.git|skills/web-design-guidelines"
 
+    # ---- vercel-labs/skills（多 skill 仓库） ----
+    "multi|find-skills|https://github.com/vercel-labs/skills.git|skills/find-skills"
+
     # ---- UseAI-pro/openclaw-skills-security（多 skill 仓库） ----
     "multi|skill-vetter|https://github.com/UseAI-pro/openclaw-skills-security.git|skills/skill-vetter"
 )

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ==========================================
-# skill_update — 拉取/更新外部 GitHub skills
+# skills_setup — 拉取/更新外部 GitHub skills
 # 将远程 skills 克隆到 ~/.agents/skills/
 #
 # 条目格式:
@@ -17,7 +17,7 @@ set -euo pipefail
 TARGET="${HOME}/.agents/skills"
 CACHE="${HOME}/.agents/.skill_cache"
 
-# ---- 外部 skill 列表 ----
+# ---- 外部 skill 列表（新增一行即可添加新 skill） ----
 SKILLS=(
     # ---- 单 skill 仓库 ----
     "single|code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
@@ -47,6 +47,9 @@ SKILLS=(
 
     # ---- vercel-labs/agent-skills（多 skill 仓库） ----
     "multi|web-design-guidelines|https://github.com/vercel-labs/agent-skills.git|skills/web-design-guidelines"
+
+    # ---- UseAI-pro/openclaw-skills-security（多 skill 仓库） ----
+    "multi|skill-vetter|https://github.com/UseAI-pro/openclaw-skills-security.git|skills/skill-vetter"
 )
 
 # ---- 函数：更新单 skill 仓库 ----

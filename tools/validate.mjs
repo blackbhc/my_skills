@@ -3,11 +3,11 @@
 /**
  * LLM Skill 校验脚本
  *
- * 扫描 skills/ 下所有 SKILL.md，检查：
+ * 扫描仓库根目录下所有 SKILL.md（自动跳过 .git / templates / tools / docs），检查：
  * - 文件是否存在
- * - 元数据字段（id, description, triggers）齐全
- * - id 与目录名一致
- * - triggers 非空
+ * - 元数据字段（name, description）齐全
+ * - name 与目录名一致
+ * - description 包含 "Use when:" 触发词
  *
  * 用法：
  *   node tools/validate.mjs              # 校验全部 skill
@@ -22,7 +22,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
-const SKILLS_DIR = join(ROOT, "skills");
+
+// 跳过这些非 skill 目录
+const SKIP_DIRS = new Set([".git", "templates", "tools", "docs", "scripts", "node_modules"]);
 
 let exitCode = 0;
 const errors = [];
@@ -134,7 +136,7 @@ function validateSingleSkill(skillDir, label) {
 
 function scanSkills(baseDir) {
   if (!existsSync(baseDir)) {
-    error(`skills/ 目录不存在: ${baseDir}`);
+    error(`根目录不存在: ${baseDir}`);
     return;
   }
 
@@ -145,13 +147,17 @@ function scanSkills(baseDir) {
     const entryPath = join(baseDir, entry);
     if (!statSync(entryPath).isDirectory()) continue;
     if (entry.startsWith(".")) continue;
+    if (SKIP_DIRS.has(entry)) continue;
+
+    // Must contain SKILL.md to be considered a skill directory
+    if (!existsSync(join(entryPath, "SKILL.md"))) continue;
 
     skillCount++;
     validateSingleSkill(entryPath, entry);
   }
 
   if (skillCount === 0) {
-    error("skills/ 目录下没有 skill 子目录");
+    error("未找到任何包含 SKILL.md 的 skill 目录");
   } else {
     pass(`共扫描 ${skillCount} 个 skill 目录 ✓`);
   }
@@ -177,7 +183,7 @@ if (specificFile) {
     validateSingleSkill(skillDir, fileName === "SKILL.md" ? dirName : fileName);
   }
 } else {
-  scanSkills(SKILLS_DIR);
+  scanSkills(ROOT);
 }
 
 // --- Report ---

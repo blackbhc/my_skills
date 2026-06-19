@@ -9,7 +9,6 @@ allowed-tools:
   - Write
   - Bash
   - Grep
-  - Glob
   - WebFetch
 ---
 
@@ -17,7 +16,8 @@ allowed-tools:
 
 > **说明**：本文件是 Skill 的标准模板。按以下结构填写即可创建一个新的 Skill。
 > - `name` 必须与所在目录名一致，使用小写字母+数字+连字符
-> - `description` 中必须包含 `Use when:` 行定义触发词
+> - `description` 中必须包含 `Use when:` 行定义触发词，只写触发条件不要总结工作流
+> - **行为塑造型 Skill（改变 Agent 行为）必须用 TDD 流程（RED→GREEN→REFACTOR）开发**
 > - 填写完成后运行 `node tools/validate.mjs` 校验格式
 
 ---
@@ -97,11 +97,15 @@ _在这里描述 Skill 的核心用途。_
 
 ## Checklist
 
-<!-- 质量自检清单 -->
+<!-- 填写完成后逐项确认 -->
 
+- [ ] `---` 在文件第一行正确开头？
+- [ ] `name` 与目录名一致？
+- [ ] `description` 包含 `Use when:` 行？
 - [ ] 目标是否明确？
 - [ ] 触发条件是否覆盖常见表述？
 - [ ] 输入是否定义清晰？
 - [ ] 输出格式是否确定？
 - [ ] 是否包含示例？
 - [ ] 边界是否清楚？
+- [ ] 行为塑造型 Skill 是否用 TDD 流程开发？

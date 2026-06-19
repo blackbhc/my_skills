@@ -1,7 +1,7 @@
 ---
 name: tokens-auto-specialization
 description: |
-  提示词自动专业化——Agent 在任意需要构造 prompt 的场合（用户请求、内部委派、工具调用、思维链规划等）自动激活。补齐隐形需求、角色设定、规则约束、输出格式、模型适配，输出精简通用版+高阶顶配版两个版本。
+  提示词自动专业化。Agent 在需要构造 prompt 的场合自动激活——无论用户任务、内部委派、工具调用还是思维链规划。
 
   Use when: 帮我, 分析, 需要, 生成, 写, 创建, 优化, 解释, 总结, 翻译, 处理, 改进, 设计, 制定, 评估, 审查, 重构, 调试, 查, 找, 实现, 配置, 部署, 测试, help, analyze, generate, write, create, optimize, explain, summarize, translate, improve, design, review, debug, implement, 需要prompt, prompt不够, 构造prompt, 缺乏prompt
 allowed-tools:

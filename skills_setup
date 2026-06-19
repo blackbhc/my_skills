@@ -39,6 +39,7 @@ SKILLS=(
 
     # ---- anthropics/skills（多 skill 仓库） ----
     "multi|frontend-design|https://github.com/anthropics/skills.git|skills/frontend-design"
+    "multi|canvas-design|https://github.com/anthropics/skills.git|skills/canvas-design"
     "multi|docx|https://github.com/anthropics/skills.git|skills/docx"
     "multi|pdf|https://github.com/anthropics/skills.git|skills/pdf"
     "multi|pptx|https://github.com/anthropics/skills.git|skills/pptx"

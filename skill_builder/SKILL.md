@@ -247,10 +247,6 @@ skill-name/
 └── references/       # 可选：参考资料
 ```
 
-**SKILL.md 必须包含的结构：**
-
-```markdown
----
 name: <skill-id>
 description: |
   <一句话描述>
@@ -911,60 +907,6 @@ Phase 2
 
 ---
 
-# Skill Description Template
-
-开发任何 Skill 时，优先生成以下内容。
-
-```markdown
----
-name: <skill-id>
-description: |
-  <一句话描述>
-
-  Use when: <触发词1, 触发词2, ...>
-allowed-tools:
-  - Read
-  - Write
----
-
-# Skill: <skill-id>
-
-## Purpose
-
-一句话说明用途。
-
-## Use When
-
-列出触发条件。
-
-## Inputs
-
-所需输入。
-
-## Workflow
-
-步骤1
-步骤2
-步骤3
-
-## Outputs
-
-输出内容。
-
-## Limitations
-
-不负责什么。
-
-## Examples
-
-示例1
-示例2
-
-## Checklist
-
-质量检查项。
-```
-
 ---
 
 # Good Example
@@ -1001,6 +943,98 @@ allowed-tools:
 - 无触发条件
 - 无边界说明
 - 无输出规范
+
+---
+
+---
+
+# Inputs for skill_builder
+
+本 Skill 从 Agent 当前上下文中自动提取输入，无需用户显式提供：
+
+| 输入 | 来源 | 说明 |
+|------|------|------|
+| 当前 Skill 的 SKILL.md 内容 | 文件系统 | 待优化/审查的 Skill 原文 |
+| 用户需求 | 对话上下文 | 用户对 Skill 的目标描述或反馈 |
+| 测试结果 | 测试运行日志 | 定量/定性评估数据（迭代优化时） |
+
+---
+
+# Outputs
+
+| 输出 | 说明 |
+|------|------|
+| 新的 SKILL.md | 从零创建的全新 Skill |
+| 优化后的 SKILL.md | 重构或增强后的 Skill |
+| 测试报告 | 基线测试 ↔ 带 Skill 测试的对比结果 |
+| Rationalization Table | Agent 失败模式与对策的对照表 |
+
+---
+
+# Limitations
+
+- **不负责编写 Skill 以外的代码。** 本 Skill 专门设计用于构建和管理其他 Skill，不应用于一般编程任务。
+- **不负责执行测试。** 本 Skill 指导如何构造测试，但不运行测试框架。
+- **不负责验证测试结果的正确性。** 测试结果的评估需要用户参与或独立的 grader。
+- **不覆盖所有可能的失败模式。** TDD 流程依赖 Agent 的实际反应，首次应用可能遗漏特定场景。
+
+---
+
+# Examples
+
+## 示例 1：创建一个代码审查 Skill
+
+> **用户**：帮我创建一个代码审查 Skill，审查 React TypeScript PR，关注安全、性能、可维护性
+
+> **Agent 执行 Phase 1-8**：
+> 1. Phase 1: 采访用户确认范围（React/TS、P0/P1/P2 优先级、输出格式）
+> 2. Phase 2: 明确负责（安全检查、性能分析、可维护性评估），不负责（风格偏好、测试覆盖率）
+> 3. Phase 3: 触发词 = "审查代码, code review, review PR, cr"
+> 4. Phase 4-6: 设计 Workflow（按安全→性能→可维护性顺序逐文件检查）
+> 5. Phase 7: 提供 2 个示例（含 SQL 注入的 PR + 含性能瓶颈的 PR）
+> 6. Phase 8: 自检 checklist，确认 YAML frontmatter 完整
+>
+> **输出**：`code-review-skill/SKILL.md`
+
+## 示例 2：TDD 方式优化现有 Skill
+
+> **用户**：我的 tokens-auto-specialization 触发不够频繁，优化一下
+
+> **Agent 执行 RED→GREEN→REFACTOR**：
+> - RED: 构造 3 个压力场景（用户说"帮我分析代码"、"解释这个架构"、"写个文档"），无 Skill 运行 baseline → Agent 没有自动构造 prompt
+> - GREEN: 将 Use when: 从仅匹配 "prompt" 关键词扩展到覆盖常见任务动词（帮我、分析、生成、写、optimize...）
+> - REFACTOR: 测试发现 Agent 仍然遗漏了内部委派场景 → 增加「Agent 内部需要构造 prompt 时自动激活」规则
+>
+> **输出**：优化后的 `tokens-auto-specialization/SKILL.md`，触发率从 30% 提升到 90%
+
+---
+
+# Checklist
+
+生成或优化 SKILL.md 前，逐项确认：
+
+**YAML Frontmatter:**
+- [ ] `---` 在文件第一行正确开头？
+- [ ] `name` 与目录名一致？
+- [ ] `description` 包含 `Use when:` 行？
+- [ ] 第二个 `---` 正确闭合？
+- [ ] `allowed-tools` 声明了本 Skill 所需的工具？
+
+**内容完整性:**
+- [ ] 有 Purpose（一句话用途）？
+- [ ] 有 Use When（触发条件列表）？
+- [ ] 有 Workflow（分步骤指令）？
+- [ ] 有 Outputs（输出格式）？
+- [ ] 有 Limitations（边界定义）？
+- [ ] 有 Examples（至少 1 个输入→输出示例）？
+- [ ] 有 Checklist（自检清单）？
+
+**质量:**
+- [ ] 零寒暄、零解释、零铺垫？
+- [ ] 示例具体可操作，非模板占位符？
+- [ ] 引导形式匹配失败类型（硬性步骤/判断标准/输出 Schema/禁止条款）？
+- [ ] 行为塑造型 Skill 是否用 TDD 流程开发？
+- [ ] 文件长度 < 500 行（超过则拆分为引用文件）？
 
 ---
 

@@ -22,6 +22,7 @@ SKILLS=(
     # ---- 单 skill 仓库 ----
     "single|code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
     "single|gpt-researcher|https://github.com/assafelovic/gpt-researcher.git"
+    "single|a-stock-data|https://github.com/simonlin1212/a-stock-data.git"
 
     # ---- obra/superpowers（多 skill 仓库） ----
     "multi|brainstorming|https://github.com/obra/superpowers.git|skills/brainstorming"

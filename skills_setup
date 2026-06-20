@@ -23,6 +23,45 @@ SKILLS=(
     "single|code-review-skill|https://github.com/awesome-skills/code-review-skill.git"
     "single|gpt-researcher|https://github.com/assafelovic/gpt-researcher.git"
     "single|a-stock-data|https://github.com/simonlin1212/a-stock-data.git"
+    "single|humanizer|https://github.com/blader/humanizer.git"
+    "single|humanizer-zh|https://github.com/op7418/humanizer-zh.git"
+    "single|stop-slop|https://github.com/hardikpandya/stop-slop.git"
+
+    # ---- SNL-UCSB/literature-survey-skill（单 skill 仓库） ----
+    "single|literature-survey-skill|https://github.com/SNL-UCSB/literature-survey-skill.git"
+
+    # ---- serenakeyitan/citation-check-skill（单 skill 仓库） ----
+    "single|citation-check-skill|https://github.com/serenakeyitan/citation-check-skill.git"
+
+    # ---- othmanadi/planning-with-files（多 skill 仓库） ----
+    "multi|planning-with-files|https://github.com/othmanadi/planning-with-files.git|skills/planning-with-files"
+    "multi|planning-with-files-zh|https://github.com/othmanadi/planning-with-files.git|skills/planning-with-files-zh"
+
+    # ---- ChenLiu-1996/figures4papers（多 skill 仓库） ----
+    "multi|scientific-figure-making|https://github.com/ChenLiu-1996/figures4papers.git|scientific-figure-making"
+
+    # ---- Master-cai/Research-Paper-Writing-Skills（多 skill 仓库） ----
+    "multi|research-paper-writing|https://github.com/Master-cai/Research-Paper-Writing-Skills.git|research-paper-writing"
+
+    # ---- WUBING2023/PaperSpine（多 skill 仓库） ----
+    "multi|paper-spine|https://github.com/WUBING2023/PaperSpine.git|dist/openclaw/skills/paper-spine"
+    "multi|paper-spine-citation|https://github.com/WUBING2023/PaperSpine.git|dist/openclaw/skills/paper-spine-citation"
+    "multi|paper-spine-research|https://github.com/WUBING2023/PaperSpine.git|dist/openclaw/skills/paper-spine-research"
+
+    # ---- Leonxlnx/taste-skill（多 skill 仓库） ----
+    "multi|design-taste-frontend|https://github.com/Leonxlnx/taste-skill.git|skills/taste-skill"
+    "multi|taste-skill-v1|https://github.com/Leonxlnx/taste-skill.git|skills/taste-skill-v1"
+    "multi|gpt-taste|https://github.com/Leonxlnx/taste-skill.git|skills/gpt-tasteskill"
+    "multi|image-to-code-skill|https://github.com/Leonxlnx/taste-skill.git|skills/image-to-code-skill"
+    "multi|imagegen-frontend-web|https://github.com/Leonxlnx/taste-skill.git|skills/imagegen-frontend-web"
+    "multi|imagegen-frontend-mobile|https://github.com/Leonxlnx/taste-skill.git|skills/imagegen-frontend-mobile"
+    "multi|brandkit|https://github.com/Leonxlnx/taste-skill.git|skills/brandkit"
+    "multi|redesign-skill|https://github.com/Leonxlnx/taste-skill.git|skills/redesign-skill"
+    "multi|soft-skill|https://github.com/Leonxlnx/taste-skill.git|skills/soft-skill"
+    "multi|output-skill|https://github.com/Leonxlnx/taste-skill.git|skills/output-skill"
+    "multi|minimalist-skill|https://github.com/Leonxlnx/taste-skill.git|skills/minimalist-skill"
+    "multi|brutalist-skill|https://github.com/Leonxlnx/taste-skill.git|skills/brutalist-skill"
+    "multi|stitch-skill|https://github.com/Leonxlnx/taste-skill.git|skills/stitch-skill"
 
     # ---- obra/superpowers（多 skill 仓库） ----
     "multi|brainstorming|https://github.com/obra/superpowers.git|skills/brainstorming"

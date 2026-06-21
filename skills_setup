@@ -192,6 +192,7 @@ echo "==> 完成: ${success}/${total} 个 skill 部署成功"
 MY_SKILLS=(
     skill_builder
     tokens-auto-specialization
+    paper-read-in-depth              # 深度阅读学术论文，生成中文总结 Markdown
 )
 
 for skill in "${MY_SKILLS[@]}"; do

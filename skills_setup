@@ -104,6 +104,14 @@ SKILLS=(
 
     # ---- UseAI-pro/openclaw-skills-security ----
     "multi|skill-vetter|https://github.com/UseAI-pro/openclaw-skills-security.git|skills/skill-vetter" # Skill安全审查
+
+    # ---- DietrichGebert/ponytail ----
+    "multi|ponytail|https://github.com/DietrichGebert/ponytail.git|skills/ponytail"                  # 反过度工程：强制最简/最懒方案
+    "multi|ponytail-audit|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-audit"      # 全仓过度工程审计
+    "multi|ponytail-help|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-help"        # 命令速查卡
+    "multi|ponytail-review|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-review"    # 代码审查：聚焦过度工程
+    "multi|ponytail-gain|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-gain"        # 量化收益展示
+    "multi|ponytail-debt|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-debt"        # 技术债务追踪
 )
 
 # ---- 函数：更新单 skill 仓库 ----

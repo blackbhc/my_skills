@@ -112,6 +112,9 @@ SKILLS=(
     "multi|ponytail-review|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-review"    # 代码审查：聚焦过度工程
     "multi|ponytail-gain|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-gain"        # 量化收益展示
     "multi|ponytail-debt|https://github.com/DietrichGebert/ponytail.git|skills/ponytail-debt"        # 技术债务追踪
+    # ---- sanyuan0704/sanyuan-skills ----
+    "multi|book-study|https://github.com/sanyuan0704/sanyuan-skills.git|skills/book-study"  # 阅读教练：系统读书→知识点梳理+掌握度测试+间隔重复
+    "multi|sigma|https://github.com/sanyuan0704/sanyuan-skills.git|skills/sigma"            # Bloom 2-Sigma 个性化教学：苏格拉底式提问引导
 )
 
 # ---- 函数：更新单 skill 仓库 ----
@@ -200,7 +203,6 @@ echo "==> 完成: ${success}/${total} 个 skill 部署成功"
 MY_SKILLS=(
     skill_builder
     tokens-auto-specialization
-    paper-read-in-depth              # 深度阅读学术论文，生成中文总结 Markdown
 )
 
 for skill in "${MY_SKILLS[@]}"; do

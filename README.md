@@ -10,9 +10,9 @@
 my_skills/
 ├── skill_builder/           # Skill 开发助手（指导如何创建和优化 Skill）
 ├── tokens-auto-specialization/  # 提示词自动专业化
+├── paper-read-in-depth/     # 深度阅读学术论文（7 步流程，Markdown+HTML 双输出）
 ├── templates/               # Skill 模板
-├── setup                    # 部署本地 skills
-├── skill_update             # 拉取/更新外部 GitHub skills
+├── skills_setup             # 批量拉取/更新外部 GitHub skills
 ├── tools/                   # 校验与开发工具
 └── docs/                    # 开发指南
 ```
@@ -23,6 +23,7 @@ my_skills/
 |-------|------|
 | [skill_builder](skill_builder/SKILL.md) | Skill 开发助手——指导 Agent 设计、开发、优化和维护其他 Skill，确保产出格式规范（含 YAML frontmatter） |
 | [tokens-auto-specialization](tokens-auto-specialization/SKILL.md) | 提示词自动专业化——Agent 持续激活，自动补齐角色/规则/格式/模型适配，输出精简版+顶配版 |
+| [paper-read-in-depth](paper-read-in-depth/SKILL.md) | 深度阅读学术论文——自动获取内容、背景研究、提炼主线与核心证据链、技术细节分析、价值评估，输出结构化 Markdown + HTML 双格式总结
 
 ## 快速开始
 
@@ -32,7 +33,7 @@ git clone <repo-url> my_skills
 cd my_skills
 
 # 2. 部署 skills 到 ~/.agents/skills/
-./setup
+./skills_setup
 
 # 3. 校验
 node tools/validate.mjs
@@ -54,16 +55,16 @@ node tools/validate.mjs
 
 ## 使用 Skill
 
-### 部署本地 Skill
+### 一键部署全部 Skill
 
 ```bash
-./setup    # 部署 skill_builder 和 tokens-auto-specialization
+./skills_setup    # 拉取外部 58 个 skill + 部署本地 3 个 skill
 ```
 
 ### 拉取外部 Skill
 
 ```bash
-./skill_update    # 拉取/更新 GitHub 上的外部 skills（如 code-review-skill）
+./skills_setup    # 已包含在全部件中，可单独运行更新外部 skill
 ```
 
 ### 手动安装

@@ -67,4 +67,4 @@ ga.view_snapshot(coords, size=20)
 - **Mass arrays**: `np.ndarray` of shape `(N,)`, in M_sun.
 - **Spherical coordinates**: `(r, phi, theta)` where `theta` = colatitude from +Z.
 - **Cylindrical coordinates**: `(R, phi, z)`.
-- **PartType convention**: 1=halo, 2=disk, 3=bulge, 4=gas (Gadget-style).
+- **PartType convention** (Gadget-style): 0=gas, 1=dark matter halo, 2=disk stars, N>2=others (e.g. bulge, boundary).

@@ -58,8 +58,13 @@ class GalaxyAnalyzer:
         return io.load_snapshot(path, part_types)
 
     @staticmethod
+    def get_num_part(path: str) -> np.ndarray:
+        """Return NumPart_ThisFile array. See `io.get_num_part`."""
+        return io.get_num_part(path)
+
+    @staticmethod
     def get_header_attrs(path: str) -> dict:
-        """Read top-level header attributes. See `io.get_header_attrs`."""
+        """Read Header group attributes. See `io.get_header_attrs`."""
         return io.get_header_attrs(path)
 
     # ---- Preprocessing ----

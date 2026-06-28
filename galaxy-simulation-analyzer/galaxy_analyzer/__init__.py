@@ -166,22 +166,22 @@ class GalaxyAnalyzer:
 
     # ---- Coordinate Transformations ----
     @staticmethod
-    def car2cyl(coordinates, velocities):
+    def car2cyl(coordinates, velocities=None):
         """Cartesian → Cylindrical. See `coords.car2cyl`."""
         return _coords.car2cyl(coordinates, velocities)
 
     @staticmethod
-    def cyl2car(coordinates, velocities):
+    def cyl2car(coordinates, velocities=None):
         """Cylindrical → Cartesian. See `coords.cyl2car`."""
         return _coords.cyl2car(coordinates, velocities)
 
     @staticmethod
-    def car2sph(coordinates, velocities):
+    def car2sph(coordinates, velocities=None):
         """Cartesian → Spherical. See `coords.car2sph`."""
         return _coords.car2sph(coordinates, velocities)
 
     @staticmethod
-    def sph2car(coordinates, velocities):
+    def sph2car(coordinates, velocities=None):
         """Spherical → Cartesian. See `coords.sph2car`."""
         return _coords.sph2car(coordinates, velocities)
 

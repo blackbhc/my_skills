@@ -23,7 +23,7 @@ SKILLS=(
     "single|code-review-skill|https://github.com/awesome-skills/code-review-skill.git" # 代码审查：安全/性能/可维护性
 
     # ---- assafelovic/gpt-researcher ----
-    "single|gpt-researcher|https://github.com/assafelovic/gpt-researcher.git" # 在线搜索并生成研究报告
+    "multi|gpt-researcher|https://github.com/assafelovic/gpt-researcher.git|skills/gpt-researcher" # 在线搜索并生成研究报告
 
     # ---- simonlin1212/a-stock-data ----
     "single|a-stock-data|https://github.com/simonlin1212/a-stock-data.git" # A股全栈数据（行情/研报/资金面/新闻）

@@ -213,8 +213,9 @@ def align_disk(
     if return_rot_mat:
         return rotation
 
-    coords_rot = np.matmul(rotation, coordinates.T).T
-    vels_rot = np.matmul(rotation, velocities.T).T
+    with np.errstate(all="ignore"):
+        coords_rot = np.matmul(rotation, coordinates.T).T
+        vels_rot = np.matmul(rotation, velocities.T).T
     return coords_rot, vels_rot
 
 

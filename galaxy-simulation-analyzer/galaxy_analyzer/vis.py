@@ -263,6 +263,11 @@ def view_snapshot(
     cbar.ax.xaxis.set_label_position("top")
     cbar.ax.xaxis.tick_top()
 
+    # Ensure colorbar width matches face-on panel
+    pos = ax_xy.get_position()
+    cbar_ax.set_position([pos.x0, cbar_ax.get_position().y0,
+                          pos.width, cbar_ax.get_position().height])
+
     _apply_annotations(ax_xy, annotations, "face-on")
     _apply_annotations(ax_xz, annotations, "side-on")
     _apply_annotations(ax_yz, annotations, "end-on")
@@ -459,6 +464,11 @@ def edge_on(
                    fontsize=14, labelpad=-55)
     cbar.ax.xaxis.set_label_position("top")
     cbar.ax.xaxis.tick_top()
+
+    # Ensure colorbar width matches face-on panel
+    pos = ax_xy.get_position()
+    cbar_ax.set_position([pos.x0, cbar_ax.get_position().y0,
+                          pos.width, cbar_ax.get_position().height])
 
     _apply_annotations(ax_xy, annotations, "face-on")
     _apply_annotations(ax_xz, annotations, "side-on")

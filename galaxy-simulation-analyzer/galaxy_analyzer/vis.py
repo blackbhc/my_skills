@@ -214,16 +214,16 @@ def edge_on(
     save_path: Optional[str] = None,
     show: bool = True,
 ) -> plt.Figure:
-    """Three-view projection: face-on (XY) + side-on (XZ) + end-on (YZ).
+    """Three-view projection: face-on (XY) + end-on (YZ) + side-on (XZ).
 
-    Layout (2×2 grid, bottom-right reserved for colorbar / empty):
+    Layout (2×2 grid, bottom-right empty):
 
         +--------+--------+
-        |  XY    |  XZ    |    XY ↔ XZ share X axis (horizontal)
-        | face-on| side   |    XY ↔ YZ share Y axis (vertical)
+        |  XY    |  YZ    |    XY ↔ YZ share Y axis (vertical)
+        | face-on| end    |    XY ↔ XZ share X axis (horizontal)
         +--------+--------+
-        |  YZ    |        |
-        | end    | (cbar) |
+        |  XZ    |        |
+        | side   | (cbar) |
         +--------+--------+
 
     All three panels are mutually axis-aligned so the same physical
@@ -280,29 +280,29 @@ def edge_on(
                va="top", ha="left", fontsize=14, color="white",
                bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # Top-right: XZ (side), X axis aligned with face-on
-    ax_xz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
-    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
-                 extent=[-size * ratio, size * ratio, -size, size])
-    ax_xz.set_xlabel("Z [kpc]")
-    ax_xz.set_ylabel("X [kpc]")
-    ax_xz.yaxis.set_label_position("right")
-    ax_xz.yaxis.tick_right()
-    ax_xz.text(0.03, 0.97, "Side (XZ)", transform=ax_xz.transAxes,
-               va="top", ha="left", fontsize=14, color="white",
-               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
-
-    # Bottom-left: YZ (end), Y axis aligned with face-on, Z with side
-    ax_yz = fig.add_subplot(gs[1, 0], sharex=ax_xz)
+    # Top-right: YZ (end) — horizontal=Z, vertical=Y  (share Y with XY)
+    ax_yz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
     ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_yz.set_xlabel("Z [kpc]")
     ax_yz.set_ylabel("Y [kpc]")
+    ax_yz.yaxis.set_label_position("right")
+    ax_yz.yaxis.tick_right()
     ax_yz.text(0.03, 0.97, "End (YZ)", transform=ax_yz.transAxes,
                va="top", ha="left", fontsize=14, color="white",
                bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # Bottom-right: hide (could host a colorbar in future)
+    # Bottom-left: XZ (side) — horizontal=X, vertical=Z  (share X with XY)
+    ax_xz = fig.add_subplot(gs[1, 0], sharex=ax_xy)
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size, size, -size * ratio, size * ratio])
+    ax_xz.set_xlabel("X [kpc]")
+    ax_xz.set_ylabel("Z [kpc]")
+    ax_xz.text(0.03, 0.97, "Side (XZ)", transform=ax_xz.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
+
+    # Bottom-right: hidden (reserved for colorbar)
     ax_cb = fig.add_subplot(gs[1, 1])
     ax_cb.set_visible(False)
 

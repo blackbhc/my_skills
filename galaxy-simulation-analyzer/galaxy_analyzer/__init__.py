@@ -264,26 +264,32 @@ class GalaxyAnalyzer:
     @staticmethod
     def view_snapshot(coordinates, masses=None, size=20.0, binNum=100,
                       cmap="jet", title="", save_path=None, show=True,
-                      vmin=None, vmax=None, interpolation="none"):
+                      vmin=None, vmax=None, interpolation="none",
+                      annotations=None):
         """3-panel projection. See `vis.view_snapshot`."""
         return _vis.view_snapshot(
             coordinates, masses, size, binNum, cmap, title,
-            save_path, show, vmin, vmax, interpolation)
+            save_path, show, vmin, vmax, interpolation,
+            annotations=annotations)
 
     @staticmethod
     def face_on(coordinates, masses=None, size=20.0, binNum=200,
                 cmap="jet", title="Face-on View", save_path=None,
-                show=True, interpolation="none", vmin=None, vmax=None):
+                show=True, interpolation="none", vmin=None, vmax=None,
+                annotations=None):
         """Face-on projection. See `vis.face_on`."""
         return _vis.face_on(
             coordinates, masses, size, binNum, cmap, title, save_path, show,
-            interpolation, vmin, vmax)
+            interpolation, vmin, vmax,
+            annotations=annotations)
 
     @staticmethod
     def edge_on(coordinates, masses=None, size=20.0, binNum=200,
                 cmap="jet", title="Edge-on View", save_path=None,
-                show=True, interpolation="none", vmin=None, vmax=None):
+                show=True, interpolation="none", vmin=None, vmax=None,
+                annotations=None):
         """Edge-on projection. See `vis.edge_on`."""
         return _vis.edge_on(
             coordinates, masses, size, binNum, cmap, title, save_path, show,
-            interpolation, vmin, vmax)
+            interpolation, vmin, vmax,
+            annotations=annotations)

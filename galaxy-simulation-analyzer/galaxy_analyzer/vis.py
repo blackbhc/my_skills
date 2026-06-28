@@ -1,5 +1,5 @@
 """
-vis.py — Visualization tools for galaxy simulation snapshots.
+vis.py - Visualization tools for galaxy simulation snapshots.
 
 Provides:
 - view_snapshot: 3-panel (face-on, edge-on-XZ, edge-on-YZ) projections
@@ -36,11 +36,67 @@ def _hist2d_log(
 
 
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:
-    """Return (vmin, vmax) covering the 0.5–99.5 percentile of all valid pixels."""
+    """Return (vmin, vmax) covering the 0.5-99.5 percentile of all valid pixels."""
     all_vals = np.concatenate([im[np.isfinite(im)] for im in images])
     if len(all_vals) == 0:
         return 0.0, 1.0
     return float(np.percentile(all_vals, 0.5)), float(np.percentile(all_vals, 99.5))
+
+
+def phys2pixel(phys, size, binNum):
+    """Convert physical coordinate to pixel index for imshow with extent.
+
+    imshow(origin='lower', extent=[-size, size, -size, size]) maps
+    physical coordinate -size to pixel 0 and +size to pixel binNum-1.
+
+    Parameters
+    ----------
+    phys : float
+        Physical coordinate value (kpc).
+    size : float
+        Half-width of the field of view (kpc).
+    binNum : int
+        Number of pixels along this axis.
+
+    Returns
+    -------
+    pixel : float
+        Pixel coordinate in [0, binNum - 1].
+    """
+    return (phys + size) / (2.0 * size) * (binNum - 1.0)
+
+
+def _apply_annotations(ax, annotations, panel):
+    """Apply annotation commands to an axes.
+
+    Each annotations entry is a dict::
+
+        {
+            "panel": "face-on",            # target panel
+            "func": "plot",                # ax method name
+            "args": ([x1, x2], [y1, y2]),  # positional args (physical coords)
+            "kwargs": {"color": "red"},    # keyword args
+        }
+
+    All positional and keyword args use physical coordinates -
+    imshow with extent handles the mapping to display coords automatically.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+    annotations : list of dict or None
+    panel : str
+        One of "face-on", "side-on", "end-on".
+    """
+    if not annotations:
+        return
+    for ann in annotations:
+        if ann.get("panel") != panel:
+            continue
+        func_name = ann["func"]
+        args = ann.get("args", ())
+        kwargs = ann.get("kwargs", {})
+        getattr(ax, func_name)(*args, **kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +197,10 @@ def view_snapshot(
     if title:
         fig.suptitle(title, fontsize=18)
 
+    _apply_annotations(ax_xy, annotations, "face-on")
+    _apply_annotations(ax_xz, annotations, "side-on")
+    _apply_annotations(ax_yz, annotations, "end-on")
+
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)
     if show:
@@ -162,6 +222,7 @@ def face_on(
     interpolation: str = "none",
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
+    annotations: Optional[list] = None,
 ) -> plt.Figure:
     """Single face-on (XY) projection.
 
@@ -177,6 +238,8 @@ def face_on(
     title : str
     save_path : str or None
     show : bool
+    annotations : list of dict or None
+        See :func:`view_snapshot`.
 
     Returns
     -------
@@ -195,6 +258,8 @@ def face_on(
     ax.set_xlabel("X [kpc]")
     ax.set_ylabel("Y [kpc]")
     ax.set_title(title, fontsize=18)
+
+    _apply_annotations(ax, annotations, "face-on")
 
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -260,11 +325,11 @@ def edge_on(
 
     x, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
 
-    # XY — horizontal=X, vertical=Y
+    # XY - horizontal=X, vertical=Y
     im_xy = _hist2d_log(y, x, weights, rng_xy, rng_xy, binNum)
-    # XZ — horizontal=X, vertical=Z  (X aligned with XY)
+    # XZ - horizontal=X, vertical=Z  (X aligned with XY)
     im_xz = _hist2d_log(z, x, weights, rng_z, rng_xy, binNum_z)
-    # YZ — horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
+    # YZ - horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
     im_yz = _hist2d_log(z, y, weights, rng_z, rng_xy, binNum_z)
 
     auto_vmin, auto_vmax = _shared_clim(im_xy, im_xz, im_yz)
@@ -288,7 +353,7 @@ def edge_on(
                va="top", ha="left", fontsize=14, color="white",
                bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # Top-right: YZ (end) — horizontal=Z, vertical=Y  (share Y with XY)
+    # Top-right: YZ (end) - horizontal=Z, vertical=Y  (share Y with XY)
     ax_yz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
     ax_yz.imshow(im_yz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
@@ -300,7 +365,7 @@ def edge_on(
                va="top", ha="left", fontsize=14, color="white",
                bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # Bottom-left: XZ (side) — horizontal=X, vertical=Z  (share X with XY)
+    # Bottom-left: XZ (side) - horizontal=X, vertical=Z  (share X with XY)
     ax_xz = fig.add_subplot(gs[1, 0], sharex=ax_xy)
     ax_xz.imshow(im_xz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size * ratio, size * ratio])
@@ -328,6 +393,10 @@ def edge_on(
                    fontsize=14, labelpad=-55)
     cbar.ax.xaxis.set_label_position("top")
     cbar.ax.xaxis.tick_top()
+
+    _apply_annotations(ax_xy, annotations, "face-on")
+    _apply_annotations(ax_xz, annotations, "side-on")
+    _apply_annotations(ax_yz, annotations, "end-on")
 
     fig.suptitle(title, fontsize=18, y=0.98)
 

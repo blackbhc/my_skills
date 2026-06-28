@@ -135,6 +135,10 @@ update_single() {
 }
 
 # ---- 函数：从多 skill 仓库复制指定 skill ----
+# 同仓库在单次运行中只拉取一次，避免过于频繁触发 GitHub 限流
+# 使用 marker 文件代替关联数组（兼容 bash 3.2）
+_PULLED_MARKER="${CACHE}/.pulled_repos"
+
 update_multi() {
     local name="$1" url="$2" subpath="$3"
     local dst="${TARGET}/${name}"
@@ -144,10 +148,13 @@ update_multi() {
     cache_name=$(echo "${url}" | sed 's|https://github.com/||; s|\.git$||; s|/|_|g')
     local cache_dir="${CACHE}/${cache_name}"
 
-    # 克隆/更新缓存仓库
+    # 克隆/更新缓存仓库（每仓库仅一次 pull）
     if [[ -d "${cache_dir}/.git" ]]; then
-        echo "[SYNC] ${cache_name}"
-        git -C "${cache_dir}" pull --ff-only --depth=1 2>/dev/null || echo "  └─ 更新失败（网络问题），使用已有缓存"
+        if ! grep -qx "${url}" "${_PULLED_MARKER}" 2>/dev/null; then
+            echo "[SYNC] ${cache_name}"
+            git -C "${cache_dir}" pull --ff-only --depth=1 2>/dev/null ||                 echo "  └─ 更新失败（网络问题），使用已有缓存"
+            echo "${url}" >> "${_PULLED_MARKER}"
+        fi
     else
         echo "[CLONE] ${cache_name}"
         rm -rf "${cache_dir}"
@@ -197,6 +204,7 @@ for entry in "${SKILLS[@]}"; do
     esac
 done
 
+rm -f "${_PULLED_MARKER}"
 echo "==> 完成: ${success}/${total} 个 skill 部署成功"
 
 # ---- 本地 skill 部署（从仓库根目录复制到 ~/.agents/skills/） ----

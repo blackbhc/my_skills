@@ -123,16 +123,18 @@ class GalaxyAnalyzer:
         velocities: Optional[np.ndarray] = None,
         masses: Optional[np.ndarray] = None,
         halo_data: Optional[Dict[str, np.ndarray]] = None,
+        align_disk: bool = False,
         enclose_radius: float = 100.0,
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
-        """Full preprocessing pipeline: recenter + align disk.
+        """Preprocessing pipeline: recenter, optionally align disk.
 
         Parameters
         ----------
         coordinates : (N, 3) ndarray
             Cartesian positions of disk particles.
         velocities : (N, 3) ndarray or None
-            Cartesian velocities of disk particles.
+            Cartesian velocities of disk particles.  Required when
+            *align_disk* is True.
         masses : (N,) ndarray or None
             Disk particle masses.
         halo_data : dict or None
@@ -140,13 +142,16 @@ class GalaxyAnalyzer:
             If provided, uses the halo most-bound particle as the system
             centre (recommended).  If None, falls back to
             ``get_stable_center`` on the disk particles themselves.
+        align_disk : bool
+            If True, rotate the system so the disk angular momentum
+            aligns with the +Z axis.  Default False (recenter only).
         enclose_radius : float
             Initial radius for COM search (only used in fallback mode).
 
         Returns
         -------
-        coords_aligned : (N, 3) ndarray
-        vels_aligned : (N, 3) ndarray or None
+        coords_out : (N, 3) ndarray
+        vels_out : (N, 3) ndarray or None
         """
         if halo_data is not None:
             center = self.get_most_bound_particle(
@@ -155,14 +160,14 @@ class GalaxyAnalyzer:
             center = self.get_stable_center(
                 coordinates, masses, enclose_radius=enclose_radius)
 
-        coords_centered = self.recenter_coordinates(coordinates, center)
+        coords_out = self.recenter_coordinates(coordinates, center)
+        vels_out = velocities
 
-        if velocities is not None:
-            coords_aligned, vels_aligned = self.align_disk(
-                coords_centered, velocities, masses)
-            return coords_aligned, vels_aligned
-        else:
-            return coords_centered, None
+        if align_disk and velocities is not None:
+            coords_out, vels_out = self.align_disk(
+                coords_out, velocities, masses)
+
+        return coords_out, vels_out
 
     # ---- Coordinate Transformations ----
     @staticmethod

@@ -149,10 +149,15 @@ update_multi() {
     local cache_dir="${CACHE}/${cache_name}"
 
     # 克隆/更新缓存仓库（每仓库仅一次 pull）
+    # fetch + reset 比 pull --ff-only 更可靠（兼容浅克隆）
     if [[ -d "${cache_dir}/.git" ]]; then
         if ! grep -qx "${url}" "${_PULLED_MARKER}" 2>/dev/null; then
             echo "[SYNC] ${cache_name}"
-            git -C "${cache_dir}" pull --ff-only --depth=1 2>/dev/null ||                 echo "  └─ 更新失败（网络问题），使用已有缓存"
+            git -C "${cache_dir}" fetch --depth=1 origin 2>/dev/null &&                 git -C "${cache_dir}" reset --hard origin/HEAD 2>/dev/null || {
+                echo "  └─ 更新失败，重新克隆..."
+                rm -rf "${cache_dir}"
+                git clone "${url}" "${cache_dir}" --depth=1 2>/dev/null ||                     echo "  └─ 克隆失败，跳过 ${name}"
+            }
             echo "${url}" >> "${_PULLED_MARKER}"
         fi
     else

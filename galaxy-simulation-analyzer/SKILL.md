@@ -264,6 +264,27 @@ fig = ga.edge_on(coords, masses, size=20, binNum=200)           # 3-view (2x2 gr
 All visualisation functions accept `cmap`, `title`, `save_path`, `vmin`/`vmax`,
 and `show` arguments.
 
+**Annotations** — add extra elements (lines, circles, text) to specific panels
+via the `annotations` parameter::
+
+    annotations = [
+        {"panel": "face-on", "func": "plot",
+         "args": ([-5, 5], [0, 0]),  # horizontal line at y=0
+         "kwargs": {"color": "white", "linestyle": "--"}},
+        {"panel": "side-on", "func": "axhline",
+         "args": (0,), "kwargs": {"color": "cyan"}},
+    ]
+    ga.view_snapshot(coords, masses, annotations=annotations)
+
+**Panel names:** ``"face-on"`` (XY), ``"side-on"`` (XZ), ``"end-on"`` (YZ).
+All coordinates are in physical kpc — ``imshow`` with ``extent`` handles the
+mapping to display pixels automatically.
+
+**`phys2pixel`** — convert a physical coordinate to pixel index::
+
+    from galaxy_analyzer.vis import phys2pixel
+    pixel_x = phys2pixel(phys_x, size=20.0, binNum=200)   # 0 … 199
+
 ## Outputs
 
 | Output | Format | Description |

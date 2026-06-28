@@ -55,12 +55,13 @@ def view_snapshot(
     masses: Optional[np.ndarray] = None,
     size: float = 20.0,
     binNum: int = 100,
-    cmap: str = "inferno",
+    cmap: str = "jet",
     title: str = "",
     save_path: Optional[str] = None,
     show: bool = True,
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
+    interpolation: str = "none",
 ) -> plt.Figure:
     """Three-panel projection: face-on (XY) | edge-on (XZ) | edge-on (YZ).
 
@@ -117,14 +118,14 @@ def view_snapshot(
 
     # -- XY (face-on): horizontal=Y, vertical=X, label X↔Y flipped --
     ax_xy = fig.add_subplot(gs[0])
-    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size, size])
     ax_xy.set_xlabel("X [kpc]")
     ax_xy.set_ylabel("Y [kpc]")
 
     # -- XZ: horizontal=Z, vertical=X (X stays vertical, aligned with face-on) --
     ax_xz = fig.add_subplot(gs[1])
-    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_xz.set_xlabel("Z [kpc]")
     ax_xz.set_ylabel("X [kpc]")
@@ -133,7 +134,7 @@ def view_snapshot(
 
     # -- YZ: horizontal=Z, vertical=Y --
     ax_yz = fig.add_subplot(gs[2])
-    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_yz.set_xlabel("Z [kpc]")
     ax_yz.set_ylabel("Y [kpc]")
@@ -157,10 +158,11 @@ def face_on(
     masses: Optional[np.ndarray] = None,
     size: float = 20.0,
     binNum: int = 200,
-    cmap: str = "inferno",
+    cmap: str = "jet",
     title: str = "Face-on View",
     save_path: Optional[str] = None,
     show: bool = True,
+    interpolation: str = "none",
 ) -> plt.Figure:
     """Single face-on (XY) projection.
 
@@ -189,7 +191,7 @@ def face_on(
                      weights, rng, rng, binNum)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(im, origin="lower", cmap=cmap,
+    ax.imshow(im, origin="lower", cmap=cmap, interpolation=interpolation,
               extent=[-size, size, -size, size])
     ax.set_xlabel("X [kpc]")
     ax.set_ylabel("Y [kpc]")
@@ -209,10 +211,11 @@ def edge_on(
     masses: Optional[np.ndarray] = None,
     size: float = 20.0,
     binNum: int = 200,
-    cmap: str = "inferno",
+    cmap: str = "jet",
     title: str = "Three-View Projection",
     save_path: Optional[str] = None,
     show: bool = True,
+    interpolation: str = "none",
 ) -> plt.Figure:
     """Three-view projection: face-on (XY) + end-on (YZ) + side-on (XZ).
 
@@ -272,7 +275,7 @@ def edge_on(
 
     # Top-left: XY (face-on)
     ax_xy = fig.add_subplot(gs[0, 0])
-    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size, size])
     ax_xy.set_xlabel("X [kpc]")
     ax_xy.set_ylabel("Y [kpc]")
@@ -282,7 +285,7 @@ def edge_on(
 
     # Top-right: YZ (end) — horizontal=Z, vertical=Y  (share Y with XY)
     ax_yz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
-    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_yz.set_xlabel("Z [kpc]")
     ax_yz.set_ylabel("Y [kpc]")
@@ -294,7 +297,7 @@ def edge_on(
 
     # Bottom-left: XZ (side) — horizontal=X, vertical=Z  (share X with XY)
     ax_xz = fig.add_subplot(gs[1, 0], sharex=ax_xy)
-    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size * ratio, size * ratio])
     ax_xz.set_xlabel("X [kpc]")
     ax_xz.set_ylabel("Z [kpc]")

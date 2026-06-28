@@ -271,25 +271,27 @@ class GalaxyAnalyzer:
     # ---- Visualization ----
     @staticmethod
     def view_snapshot(coordinates, masses=None, size=20.0, binNum=100,
-                      cmap="inferno", title="", save_path=None, show=True,
-                      vmin=None, vmax=None):
+                      cmap="jet", title="", save_path=None, show=True,
+                      vmin=None, vmax=None, interpolation="none"):
         """3-panel projection. See `vis.view_snapshot`."""
         return _vis.view_snapshot(
             coordinates, masses, size, binNum, cmap, title,
-            save_path, show, vmin, vmax)
+            save_path, show, vmin, vmax, interpolation)
 
     @staticmethod
     def face_on(coordinates, masses=None, size=20.0, binNum=200,
-                cmap="inferno", title="Face-on View", save_path=None,
-                show=True):
+                cmap="jet", title="Face-on View", save_path=None,
+                show=True, interpolation="none"):
         """Face-on projection. See `vis.face_on`."""
         return _vis.face_on(
-            coordinates, masses, size, binNum, cmap, title, save_path, show)
+            coordinates, masses, size, binNum, cmap, title, save_path, show,
+            interpolation)
 
     @staticmethod
     def edge_on(coordinates, masses=None, size=20.0, binNum=200,
-                cmap="inferno", title="Edge-on View", save_path=None,
-                show=True):
+                cmap="jet", title="Edge-on View", save_path=None,
+                show=True, interpolation="none"):
         """Edge-on projection. See `vis.edge_on`."""
         return _vis.edge_on(
-            coordinates, masses, size, binNum, cmap, title, save_path, show)
+            coordinates, masses, size, binNum, cmap, title, save_path, show,
+            interpolation)

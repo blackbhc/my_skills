@@ -75,7 +75,7 @@ def m2phase(
         A2_complex = np.sum(exponents)
     else:
         A2_complex = np.sum(masses * exponents)
-    return np.angle(A2_complex) / 2.0
+    return np.arctan2(A2_complex.imag, A2_complex.real) / 2.0
 
 
 def A2profile(

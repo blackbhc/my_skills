@@ -25,14 +25,6 @@ from . import morphology as _morphology
 from . import structure as _structure
 from . import vis as _vis
 
-# Matplotlib defaults (user can override)
-import matplotlib as mpl
-mpl.rcParams.update({
-    "font.family": "Times New Roman",
-    "font.size": 26,
-    "mathtext.fontset": "cm",
-})
-
 
 class GalaxyAnalyzer:
     """Master class for analyzing galaxy N-body simulation snapshots.
@@ -161,7 +153,7 @@ class GalaxyAnalyzer:
                 coordinates, masses, enclose_radius=enclose_radius)
 
         coords_out = self.recenter_coordinates(coordinates, center)
-        vels_out = velocities
+        vels_out = velocities.copy() if velocities is not None else None
 
         if align_disk and velocities is not None:
             coords_out, vels_out = self.align_disk(

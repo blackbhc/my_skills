@@ -75,10 +75,12 @@ def getRdHz(
     else:
         Rd = np.nan
 
-    # Fit Zd from vertical density at Rmin
-    mask_Z = rho[0, :] > 0
+    # Fit Zd from vertical density averaged over inner radial bins
+    n_zd_bins = min(3, rho.shape[0])
+    rho_Z_avg = np.nanmean(rho[:n_zd_bins, :], axis=0)
+    mask_Z = rho_Z_avg > 0
     if mask_Z.sum() >= 3:
-        res = linregress(np.abs(Z_centers[mask_Z]), np.log(rho[0, :][mask_Z]))
+        res = linregress(np.abs(Z_centers[mask_Z]), np.log(rho_Z_avg[mask_Z]))
         Zd = -1.0 / res.slope if res.slope < 0 else np.nan
     else:
         Zd = np.nan

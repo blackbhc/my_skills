@@ -30,12 +30,9 @@ def _hist2d_log(
     H, _, _ = np.histogram2d(x, y, bins=binNum,
                               range=[x_range, y_range],
                               weights=weights)
-    # Remember empty bins before clamping
     mask_empty = H <= 0
-    H = np.where(mask_empty, 1.0, H)
-    H = np.log10(H)
-    H = np.where(mask_empty, np.nan, H)
-    return H.T  # columns=y, rows=x  →  imshow horizontal=y, vertical=x
+    H_log = np.where(mask_empty, np.nan, np.log10(np.maximum(H, 1.0)))
+    return H_log.T  # columns=y, rows=x  →  imshow horizontal=y, vertical=x
 
 
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:
@@ -197,7 +194,7 @@ def face_on(
               extent=[-size, size, -size, size])
     ax.set_xlabel("X [kpc]")
     ax.set_ylabel("Y [kpc]")
-    ax.set_title(title)
+    ax.set_title(title, fontsize=18)
 
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)

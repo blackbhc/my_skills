@@ -179,10 +179,10 @@ def align_disk(
         vels_sub = velocities
         masses_sub = masses
 
-    L = np.zeros(3)
-    for i in range(len(coords_sub)):
-        m = masses_sub[i]
-        L += m * np.cross(coords_sub[i], vels_sub[i])
+    L = np.sum(
+        masses_sub[:, np.newaxis] * np.cross(coords_sub, vels_sub),
+        axis=0,
+    )
 
     L_norm = np.linalg.norm(L)
     if L_norm < 1e-20:

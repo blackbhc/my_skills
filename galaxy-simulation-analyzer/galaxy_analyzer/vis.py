@@ -2,43 +2,53 @@
 vis.py — Visualization tools for galaxy simulation snapshots.
 
 Provides:
-- view_snapshot: 3-panel (face-on, edge-on, side-on) projections
-- face_on: single face-on projection
-- edge_on: single edge-on projection
+- view_snapshot: 3-panel (face-on, edge-on-XZ, edge-on-YZ) projections
+- face_on: single face-on (XY) projection
+- edge_on: 2-panel edge-on (XZ + YZ), X-axis aligned with face-on
 """
 
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.stats import binned_statistic_2d
-from typing import Optional
+from typing import Optional, Tuple
 
 
-def _log_norm_matrix(matrix: np.ndarray) -> np.ndarray:
-    """Log-normalize a 2D matrix for display."""
-    mat = matrix.copy()
-    mask = mat < 1
-    mat[mask] = 1
-    mat = np.log10(mat)
-    mat[mask] = np.nan
-    return mat
-
-
-def _bin_2d_image(
+def _hist2d_log(
     x: np.ndarray,
     y: np.ndarray,
     weights: np.ndarray,
-    size: float,
+    x_range: Tuple[float, float],
+    y_range: Tuple[float, float],
     binNum: int,
 ) -> np.ndarray:
-    """Create a 2D binned image."""
-    image, _, _, _ = binned_statistic_2d(
-        x=x, y=y, values=weights,
-        range=[[-size, size], [-size, size]],
-        bins=binNum,
-        statistic="sum" if weights is not None else "count",
-    )
-    return image
+    """Build a log-normalised 2-D histogram for display.
 
+    ``binned_statistic_2d(x, y)`` returns ``statistic[i, j]`` = value
+    in x-bin *i* and y-bin *j*.  For ``imshow`` with ``origin="lower"``
+    we need columns ↔ y and rows ↔ x, so the image is **transposed**
+    before return.  This gives the correct visual orientation:
+    horizontal = y,  vertical = x.
+    """
+    H, _, _ = np.histogram2d(x, y, bins=binNum,
+                              range=[x_range, y_range],
+                              weights=weights)
+    # H[i,j] — x-bin i, y-bin j
+    H = np.where(H < 1, 1.0, H)
+    H = np.log10(H)
+    H = np.where(H < 1e-20, np.nan, H)
+    return H.T  # now columns=y, rows=x  →  imshow horizontal=y, vertical=x
+
+
+def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:
+    """Return (vmin, vmax) covering the 0.5–99.5 percentile of all valid pixels."""
+    all_vals = np.concatenate([im[np.isfinite(im)] for im in images])
+    if len(all_vals) == 0:
+        return 0.0, 1.0
+    return float(np.percentile(all_vals, 0.5)), float(np.percentile(all_vals, 99.5))
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 def view_snapshot(
     coordinates: np.ndarray,
@@ -52,101 +62,83 @@ def view_snapshot(
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
 ) -> plt.Figure:
-    """Three-panel projection: face-on (XY), edge-on (XZ), side-on (YZ).
+    """Three-panel projection: face-on (XY) | edge-on (XZ) | edge-on (YZ).
+
+    All panels share the same X-axis direction: the face-on horizontal
+    axis is *X*, and the first edge-on panel (XZ) also places *X* on
+    the vertical axis so the two stay aligned.
 
     Parameters
     ----------
     coordinates : (N, 3) ndarray
-        Cartesian positions.
+        Cartesian positions (x, y, z) in kpc.
     masses : (N,) ndarray or None
-        Particle masses for surface density weighting.
+        Particle masses.
     size : float
-        Half-width of the field of view in kpc.
+        Half-width of the face-on field of view (and vertical extent of
+        edge-on panels) in kpc.
     binNum : int
-        Number of pixels per side for XY panel.
+        Number of pixels per side for the face-on panel.
     cmap : str
-        Matplotlib colormap name.
+        Matplotlib colormap.
     title : str
         Figure suptitle.
     save_path : str or None
-        If provided, save figure to this path.
     show : bool
-        If True, display the figure.
     vmin, vmax : float or None
-        Colorbar range.
 
     Returns
     -------
     matplotlib.figure.Figure
     """
-    ratio = 0.3  # edge-on panels thinner
-    binNum_edge = int(binNum * ratio)
+    ratio = 0.3
+    binNum_edge = max(int(binNum * ratio), 10)
 
-    if masses is None:
-        weights = np.ones(len(coordinates))
-    else:
-        weights = masses
+    weights = (masses if masses is not None
+               else np.ones(len(coordinates), dtype=np.float32))
+
+    x, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
+    xy_range = (-size, size)
+    z_range = (-size * ratio, size * ratio)
+
+    im_xy = _hist2d_log(y, x, weights, xy_range, xy_range, binNum)
+    im_xz = _hist2d_log(z, x, weights, z_range, xy_range, binNum_edge)
+    im_yz = _hist2d_log(z, y, weights, z_range, xy_range, binNum_edge)
+
+    auto_min, auto_max = _shared_clim(im_xy, im_xz, im_yz)
+    if vmin is None:
+        vmin = auto_min
+    if vmax is None:
+        vmax = auto_max
 
     fig = plt.figure(figsize=(18, 6))
     gs = fig.add_gridspec(1, 3, width_ratios=[1, ratio, ratio],
                           wspace=0.02, hspace=0.02)
 
-    ax_face = fig.add_subplot(gs[0])
-    ax_edge = fig.add_subplot(gs[1])
-    ax_side = fig.add_subplot(gs[2])
+    # -- XY (face-on): horizontal=Y, vertical=X, label X↔Y flipped --
+    ax_xy = fig.add_subplot(gs[0])
+    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size, size, -size, size])
+    ax_xy.set_xlabel("X [kpc]")
+    ax_xy.set_ylabel("Y [kpc]")
 
-    # XY (face-on)
-    im_xy = _bin_2d_image(coordinates[:, 1], coordinates[:, 0],
-                          weights, size, binNum)
-    im_xy = _log_norm_matrix(im_xy)
+    # -- XZ: horizontal=Z, vertical=X (X stays vertical, aligned with face-on) --
+    ax_xz = fig.add_subplot(gs[1])
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size * ratio, size * ratio, -size, size])
+    ax_xz.set_xlabel("Z [kpc]")
+    ax_xz.set_ylabel("X [kpc]")
+    ax_xz.yaxis.set_label_position("right")
+    ax_xz.yaxis.tick_right()
 
-    # XZ (edge-on)
-    im_xz = _bin_2d_image(coordinates[:, 2], coordinates[:, 0],
-                          weights, size * ratio, binNum_edge)
-    im_xz = _log_norm_matrix(im_xz)
-
-    # YZ (side-on)
-    im_yz = _bin_2d_image(coordinates[:, 1], coordinates[:, 2],
-                          weights, size, binNum)
-    im_yz = _log_norm_matrix(im_yz)
-
-    # Shared color range
-    all_valid = np.concatenate([
-        im_xy[~np.isnan(im_xy)],
-        im_xz[~np.isnan(im_xz)],
-        im_yz[~np.isnan(im_yz)],
-    ])
-    if len(all_valid) == 0:
-        all_valid = np.array([0.0, 1.0])
-    if vmin is None:
-        vmin = np.percentile(all_valid, 0.5)
-    if vmax is None:
-        vmax = np.percentile(all_valid, 99.5)
-
-    # Face-on
-    ax_face.imshow(im_xy, origin="lower", cmap=cmap,
-                   vmin=vmin, vmax=vmax,
-                   extent=[-size, size, -size, size])
-    ax_face.set_xlabel("X [kpc]")
-    ax_face.set_ylabel("Y [kpc]")
-
-    # Edge-on
-    ax_edge.imshow(im_xz, origin="lower", cmap=cmap,
-                   vmin=vmin, vmax=vmax,
-                   extent=[-size * ratio, size * ratio, -size, size])
-    ax_edge.set_xlabel("Z [kpc]")
-    ax_edge.set_ylabel("X [kpc]")
-    ax_edge.yaxis.set_label_position("right")
-    ax_edge.yaxis.tick_right()
-
-    # Side-on
-    ax_side.imshow(im_yz, origin="lower", cmap=cmap,
-                   vmin=vmin, vmax=vmax,
-                   extent=[-size, size, -size * ratio, size * ratio])
-    ax_side.set_xlabel("Y [kpc]")
-    ax_side.set_ylabel("Z [kpc]")
-    ax_side.yaxis.set_label_position("right")
-    ax_side.yaxis.tick_right()
+    # -- YZ: horizontal=Z, vertical=Y --
+    ax_yz = fig.add_subplot(gs[2])
+    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size * ratio, size * ratio, -size, size])
+    ax_yz.set_xlabel("Z [kpc]")
+    ax_yz.set_ylabel("Y [kpc]")
+    ax_yz.yaxis.set_label_position("right")
+    ax_yz.yaxis.tick_right()
 
     if title:
         fig.suptitle(title, fontsize=18)
@@ -157,7 +149,6 @@ def view_snapshot(
         plt.show()
     else:
         plt.close(fig)
-
     return fig
 
 
@@ -173,6 +164,8 @@ def face_on(
 ) -> plt.Figure:
     """Single face-on (XY) projection.
 
+    Horizontal = X,  Vertical = Y.
+
     Parameters
     ----------
     coordinates : (N, 3) ndarray
@@ -188,14 +181,12 @@ def face_on(
     -------
     matplotlib.figure.Figure
     """
-    if masses is None:
-        weights = np.ones(len(coordinates))
-    else:
-        weights = masses
+    weights = (masses if masses is not None
+               else np.ones(len(coordinates), dtype=np.float32))
+    rng = (-size, size)
 
-    im = _bin_2d_image(coordinates[:, 1], coordinates[:, 0],
-                       weights, size, binNum)
-    im = _log_norm_matrix(im)
+    im = _hist2d_log(coordinates[:, 1], coordinates[:, 0],
+                     weights, rng, rng, binNum)
 
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(im, origin="lower", cmap=cmap,
@@ -210,7 +201,6 @@ def face_on(
         plt.show()
     else:
         plt.close(fig)
-
     return fig
 
 
@@ -220,18 +210,24 @@ def edge_on(
     size: float = 20.0,
     binNum: int = 200,
     cmap: str = "inferno",
-    title: str = "Edge-on View",
+    title: str = "Edge-on Views",
     save_path: Optional[str] = None,
     show: bool = True,
 ) -> plt.Figure:
-    """Single edge-on (XZ) projection.
+    """Two-panel edge-on projections: XZ (left) and YZ (right).
+
+    Both panels share the same Z (horizontal) range.  The left panel
+    (XZ) keeps *X* on the vertical axis so it aligns with the vertical
+    direction of the face-on view.
 
     Parameters
     ----------
     coordinates : (N, 3) ndarray
     masses : (N,) ndarray or None
     size : float
+        Vertical (X/Y) half-width in kpc.
     binNum : int
+        Number of pixels for the vertical dimension.
     cmap : str
     title : str
     save_path : str or None
@@ -241,24 +237,37 @@ def edge_on(
     -------
     matplotlib.figure.Figure
     """
-    if masses is None:
-        weights = np.ones(len(coordinates))
-    else:
-        weights = masses
+    weights = (masses if masses is not None
+               else np.ones(len(coordinates), dtype=np.float32))
 
     ratio = 0.3
-    binNum_edge = int(binNum * ratio)
+    binNum_edge = max(int(binNum * ratio), 10)
+    xy_range = (-size, size)
+    z_range = (-size * ratio, size * ratio)
 
-    im = _bin_2d_image(coordinates[:, 2], coordinates[:, 0],
-                       weights, size * ratio, binNum_edge)
-    im = _log_norm_matrix(im)
+    im_xz = _hist2d_log(coordinates[:, 2], coordinates[:, 0],
+                        weights, z_range, xy_range, binNum_edge)
+    im_yz = _hist2d_log(coordinates[:, 2], coordinates[:, 1],
+                        weights, z_range, xy_range, binNum_edge)
 
-    fig, ax = plt.subplots(figsize=(6, 10))
-    ax.imshow(im, origin="lower", cmap=cmap,
-              extent=[-size * ratio, size * ratio, -size, size])
-    ax.set_xlabel("Z [kpc]")
-    ax.set_ylabel("X [kpc]")
-    ax.set_title(title)
+    vmin, vmax = _shared_clim(im_xz, im_yz)
+
+    fig, (ax_xz, ax_yz) = plt.subplots(1, 2, figsize=(10, 10))
+
+    # XZ
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size * ratio, size * ratio, -size, size])
+    ax_xz.set_xlabel("Z [kpc]")
+    ax_xz.set_ylabel("X [kpc]")
+
+    # YZ
+    ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size * ratio, size * ratio, -size, size])
+    ax_yz.set_xlabel("Z [kpc]")
+    ax_yz.set_ylabel("Y [kpc]")
+
+    fig.suptitle(title, fontsize=18)
+    fig.tight_layout()
 
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -266,5 +275,4 @@ def edge_on(
         plt.show()
     else:
         plt.close(fig)
-
     return fig

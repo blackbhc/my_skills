@@ -109,11 +109,20 @@ class GalaxyAnalyzer:
         """Shift coordinates to center. See `preprocess.recenter_coordinates`."""
         return _preprocess.recenter_coordinates(coordinates, center)
 
+    @staticmethod
+    def get_most_bound_particle(
+        coordinates: np.ndarray,
+        potential: np.ndarray,
+    ) -> np.ndarray:
+        """Return most-bound particle coords. See `preprocess.get_most_bound_particle`."""
+        return _preprocess.get_most_bound_particle(coordinates, potential)
+
     def preprocess_disk(
         self,
         coordinates: np.ndarray,
         velocities: Optional[np.ndarray] = None,
         masses: Optional[np.ndarray] = None,
+        halo_data: Optional[Dict[str, np.ndarray]] = None,
         enclose_radius: float = 100.0,
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """Full preprocessing pipeline: recenter + align disk.
@@ -121,18 +130,31 @@ class GalaxyAnalyzer:
         Parameters
         ----------
         coordinates : (N, 3) ndarray
+            Cartesian positions of disk particles.
         velocities : (N, 3) ndarray or None
+            Cartesian velocities of disk particles.
         masses : (N,) ndarray or None
+            Disk particle masses.
+        halo_data : dict or None
+            Dict with 'Coordinates' and 'Potential' from PartType1 (DM halo).
+            If provided, uses the halo most-bound particle as the system
+            centre (recommended).  If None, falls back to
+            ``get_stable_center`` on the disk particles themselves.
         enclose_radius : float
-            Initial radius for COM search.
+            Initial radius for COM search (only used in fallback mode).
 
         Returns
         -------
         coords_aligned : (N, 3) ndarray
         vels_aligned : (N, 3) ndarray or None
         """
-        center = self.get_stable_center(
-            coordinates, masses, enclose_radius=enclose_radius)
+        if halo_data is not None:
+            center = self.get_most_bound_particle(
+                halo_data["Coordinates"], halo_data["Potential"])
+        else:
+            center = self.get_stable_center(
+                coordinates, masses, enclose_radius=enclose_radius)
+
         coords_centered = self.recenter_coordinates(coordinates, center)
 
         if velocities is not None:

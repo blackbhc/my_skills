@@ -1,8 +1,8 @@
 """
-preprocess.py — Shrinking-sphere recenter and disk alignment.
+preprocess.py — Shrinking-sphere recenter, most-bound-particle center, and disk alignment.
 
 Preprocessing steps before analyzing a galaxy snapshot:
-1. Find stable center-of-mass via iterative shrinking sphere.
+1. Find center via most-bound particle (halo) or shrinking-sphere COM.
 2. Compute principal axes via inertia tensor.
 3. Align disk angular momentum to the +Z axis.
 """
@@ -69,6 +69,33 @@ def get_stable_center(
     return center
 
 
+def get_most_bound_particle(
+    coordinates: np.ndarray,
+    potential: np.ndarray,
+) -> np.ndarray:
+    """Return the coordinates of the most bound particle.
+
+    The most bound particle is the one with the minimum (most negative)
+    gravitational potential.  In cosmological simulations the dark matter
+    halo (PartType1) most-bound particle is the best single-point
+    estimate of the system centre.
+
+    Parameters
+    ----------
+    coordinates : (N, 3) ndarray
+        Cartesian positions.
+    potential : (N,) ndarray
+        Gravitational potential values.
+
+    Returns
+    -------
+    center : (3,) ndarray
+        Coordinates of the most bound particle in kpc.
+    """
+    idx = np.argmin(potential)
+    return coordinates[idx]
+
+
 def get_principal_axes(
     coordinates: np.ndarray,
     masses: Optional[np.ndarray] = None,
@@ -113,7 +140,7 @@ def align_disk(
     masses: Optional[np.ndarray] = None,
     enclose_radius: float = -1.0,
     return_rot_mat: bool = False,
-) -> Tuple:
+):
     """Align disk angular momentum to +Z axis.
 
     Also aligns the minor axis (shortest principal axis) to +Z as a fallback

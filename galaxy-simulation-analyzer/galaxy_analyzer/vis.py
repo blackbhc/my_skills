@@ -30,8 +30,9 @@ def _hist2d_log(
     H, _, _ = np.histogram2d(x, y, bins=binNum,
                               range=[x_range, y_range],
                               weights=weights)
-    mask_empty = H <= 0
-    H_log = np.where(mask_empty, np.nan, np.log10(np.maximum(H, 1.0)))
+    H_log = np.full_like(H, np.nan)
+    mask_ok = H > 0
+    H_log[mask_ok] = np.log10(H[mask_ok])
     return H_log.T  # columns=y, rows=x  →  imshow horizontal=y, vertical=x
 
 

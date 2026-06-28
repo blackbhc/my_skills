@@ -22,20 +22,20 @@ def _hist2d_log(
 ) -> np.ndarray:
     """Build a log-normalised 2-D histogram for display.
 
-    ``binned_statistic_2d(x, y)`` returns ``statistic[i, j]`` = value
-    in x-bin *i* and y-bin *j*.  For ``imshow`` with ``origin="lower"``
-    we need columns ↔ y and rows ↔ x, so the image is **transposed**
-    before return.  This gives the correct visual orientation:
-    horizontal = y,  vertical = x.
+    ``histogram2d(x, y)`` returns ``H[i, j]`` = value in x-bin *i*
+    and y-bin *j*.  For ``imshow`` with ``origin="lower"`` we need
+    columns ↔ y and rows ↔ x, so the image is **transposed** before
+    return.
     """
     H, _, _ = np.histogram2d(x, y, bins=binNum,
                               range=[x_range, y_range],
                               weights=weights)
-    # H[i,j] — x-bin i, y-bin j
-    H = np.where(H < 1, 1.0, H)
+    # Remember empty bins before clamping
+    mask_empty = H <= 0
+    H = np.where(mask_empty, 1.0, H)
     H = np.log10(H)
-    H = np.where(H < 1e-20, np.nan, H)
-    return H.T  # now columns=y, rows=x  →  imshow horizontal=y, vertical=x
+    H = np.where(mask_empty, np.nan, H)
+    return H.T  # columns=y, rows=x  →  imshow horizontal=y, vertical=x
 
 
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:

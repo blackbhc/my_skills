@@ -210,24 +210,33 @@ def edge_on(
     size: float = 20.0,
     binNum: int = 200,
     cmap: str = "inferno",
-    title: str = "Edge-on Views",
+    title: str = "Three-View Projection",
     save_path: Optional[str] = None,
     show: bool = True,
 ) -> plt.Figure:
-    """Two-panel edge-on projections: XZ (left) and YZ (right).
+    """Three-view projection: face-on (XY) + side-on (XZ) + end-on (YZ).
 
-    Both panels share the same Z (horizontal) range.  The left panel
-    (XZ) keeps *X* on the vertical axis so it aligns with the vertical
-    direction of the face-on view.
+    Layout (2×2 grid, bottom-right reserved for colorbar / empty):
+
+        +--------+--------+
+        |  XY    |  XZ    |    XY ↔ XZ share X axis (horizontal)
+        | face-on| side   |    XY ↔ YZ share Y axis (vertical)
+        +--------+--------+
+        |  YZ    |        |
+        | end    | (cbar) |
+        +--------+--------+
+
+    All three panels are mutually axis-aligned so the same physical
+    direction maps to the same screen direction across adjacent panels.
 
     Parameters
     ----------
     coordinates : (N, 3) ndarray
     masses : (N,) ndarray or None
     size : float
-        Vertical (X/Y) half-width in kpc.
+        Half-width for the in-plane (X / Y) axes in kpc.
     binNum : int
-        Number of pixels for the vertical dimension.
+        Number of pixels for the in-plane dimension.
     cmap : str
     title : str
     save_path : str or None
@@ -241,33 +250,63 @@ def edge_on(
                else np.ones(len(coordinates), dtype=np.float32))
 
     ratio = 0.3
-    binNum_edge = max(int(binNum * ratio), 10)
-    xy_range = (-size, size)
-    z_range = (-size * ratio, size * ratio)
+    binNum_z = max(int(binNum * ratio), 10)
+    rng_xy = (-size, size)
+    rng_z = (-size * ratio, size * ratio)
 
-    im_xz = _hist2d_log(coordinates[:, 2], coordinates[:, 0],
-                        weights, z_range, xy_range, binNum_edge)
-    im_yz = _hist2d_log(coordinates[:, 2], coordinates[:, 1],
-                        weights, z_range, xy_range, binNum_edge)
+    x, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
 
-    vmin, vmax = _shared_clim(im_xz, im_yz)
+    # XY — horizontal=X, vertical=Y
+    im_xy = _hist2d_log(y, x, weights, rng_xy, rng_xy, binNum)
+    # XZ — horizontal=X, vertical=Z  (X aligned with XY)
+    im_xz = _hist2d_log(z, x, weights, rng_z, rng_xy, binNum_z)
+    # YZ — horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
+    im_yz = _hist2d_log(z, y, weights, rng_z, rng_xy, binNum_z)
 
-    fig, (ax_xz, ax_yz) = plt.subplots(1, 2, figsize=(10, 10))
+    vmin, vmax = _shared_clim(im_xy, im_xz, im_yz)
 
-    # XZ
+    fig = plt.figure(figsize=(14, 14))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1, ratio],
+                          height_ratios=[1, ratio],
+                          hspace=0.03, wspace=0.03)
+
+    # Top-left: XY (face-on)
+    ax_xy = fig.add_subplot(gs[0, 0])
+    ax_xy.imshow(im_xy, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
+                 extent=[-size, size, -size, size])
+    ax_xy.set_xlabel("X [kpc]")
+    ax_xy.set_ylabel("Y [kpc]")
+    ax_xy.text(0.03, 0.97, "Face-on (XY)", transform=ax_xy.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
+
+    # Top-right: XZ (side), X axis aligned with face-on
+    ax_xz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
     ax_xz.imshow(im_xz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_xz.set_xlabel("Z [kpc]")
     ax_xz.set_ylabel("X [kpc]")
+    ax_xz.yaxis.set_label_position("right")
+    ax_xz.yaxis.tick_right()
+    ax_xz.text(0.03, 0.97, "Side (XZ)", transform=ax_xz.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # YZ
+    # Bottom-left: YZ (end), Y axis aligned with face-on, Z with side
+    ax_yz = fig.add_subplot(gs[1, 0], sharex=ax_xz)
     ax_yz.imshow(im_yz, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_yz.set_xlabel("Z [kpc]")
     ax_yz.set_ylabel("Y [kpc]")
+    ax_yz.text(0.03, 0.97, "End (YZ)", transform=ax_yz.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    fig.suptitle(title, fontsize=18)
-    fig.tight_layout()
+    # Bottom-right: hide (could host a colorbar in future)
+    ax_cb = fig.add_subplot(gs[1, 1])
+    ax_cb.set_visible(False)
+
+    fig.suptitle(title, fontsize=18, y=0.98)
 
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)

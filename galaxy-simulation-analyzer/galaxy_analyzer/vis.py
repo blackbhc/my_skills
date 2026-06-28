@@ -33,7 +33,7 @@ def _hist2d_log(
     H_log = np.full_like(H, np.nan)
     mask_ok = H > 0
     H_log[mask_ok] = np.log10(H[mask_ok])
-    return H_log.T  # columns=y, rows=x  →  imshow horizontal=y, vertical=x
+    return H_log.T  # columns=y_param, rows=x_param  →  imshow horizontal=x_param, vertical=y_param
 
 
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:
@@ -157,7 +157,7 @@ def view_snapshot(
     xy_range = (-size, size)
     z_range = (-size * ratio, size * ratio)
 
-    im_xy = _hist2d_log(y, x, weights, xy_range, xy_range, binNum)
+    im_xy = _hist2d_log(x, y, weights, xy_range, xy_range, binNum)
     im_xz = _hist2d_log(z, x, weights, z_range, xy_range, binNum_edge)
     im_yz = _hist2d_log(z, y, weights, z_range, xy_range, binNum_edge)
 
@@ -171,7 +171,7 @@ def view_snapshot(
     gs = fig.add_gridspec(1, 3, width_ratios=[1, ratio, ratio],
                           wspace=0.02, hspace=0.02)
 
-    # -- XY (face-on): horizontal=Y, vertical=X, label X↔Y flipped --
+    # -- XY (face-on): horizontal=X, vertical=Y --
     ax_xy = fig.add_subplot(gs[0])
     ax_xy.imshow(im_xy, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size, size])
@@ -251,7 +251,7 @@ def face_on(
                else np.ones(len(coordinates), dtype=np.float32))
     rng = (-size, size)
 
-    im = _hist2d_log(coordinates[:, 1], coordinates[:, 0],
+    im = _hist2d_log(coordinates[:, 0], coordinates[:, 1],
                      weights, rng, rng, binNum)
 
     fig, ax = plt.subplots(figsize=(10, 10))

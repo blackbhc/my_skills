@@ -9,6 +9,7 @@ Provides:
 
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.stats import binned_statistic_2d
 from typing import Optional, Tuple
 
 
@@ -19,21 +20,46 @@ def _hist2d_log(
     x_range: Tuple[float, float],
     y_range: Tuple[float, float],
     binNum: int,
+    statistic: str = "sum",
 ) -> np.ndarray:
     """Build a log-normalised 2-D histogram for display.
 
-    ``histogram2d(x, y)`` returns ``H[i, j]`` = value in x-bin *i*
-    and y-bin *j*.  For ``imshow`` with ``origin="lower"`` we need
-    columns ↔ y and rows ↔ x, so the image is **transposed** before
-    return.
+    Convention: ``binned_statistic_2d(x, y, ...)`` returns
+    ``stat[i, j]`` for points in x-bin *i*, y-bin *j*, so rows = *x*
+    (Y axis of plot) and cols = *y* (X axis of plot).
+    Returns the image directly (no transpose needed) for ``imshow``
+    with ``origin="lower"``.
+
+    Parameters
+    ----------
+    x : (N,) ndarray
+        Data mapped to rows → Y axis of the image.
+    y : (N,) ndarray
+        Data mapped to columns → X axis of the image.
+    weights : (N,) ndarray
+        Values to aggregate (e.g. particle masses).
+    x_range : (float, float)
+        Physical range for *x* (Y axis).
+    y_range : (float, float)
+        Physical range for *y* (X axis).
+    binNum : int
+        Number of bins per axis (image will be ``binNum × binNum``).
+    statistic : str
+        Statistic passed to ``binned_statistic_2d``
+        (``"sum"``, ``"mean"``, ``"std"``, etc.).
     """
-    H, _, _ = np.histogram2d(x, y, bins=binNum,
-                              range=[x_range, y_range],
-                              weights=weights)
-    H_log = np.full_like(H, np.nan)
-    mask_ok = H > 0
-    H_log[mask_ok] = np.log10(H[mask_ok])
-    return H_log.T  # columns=y_param, rows=x_param  →  imshow horizontal=x_param, vertical=y_param
+    stat, _, _, _ = binned_statistic_2d(
+        x, y, values=weights,
+        statistic=statistic,
+        bins=[binNum, binNum],
+        range=[x_range, y_range],
+    )
+    # stat[i, j] = aggregate in (x-bin i, y-bin j)
+    # rows = x (Y axis), cols = y (X axis) → directly usable by imshow
+    mask_ok = stat > 0
+    H_log = np.full_like(stat, np.nan, dtype=np.float64)
+    H_log[mask_ok] = np.log10(stat[mask_ok])
+    return H_log
 
 
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:

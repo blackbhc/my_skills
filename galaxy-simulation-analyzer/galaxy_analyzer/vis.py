@@ -306,6 +306,21 @@ def edge_on(
     ax_cb = fig.add_subplot(gs[1, 1])
     ax_cb.set_visible(False)
 
+    # Horizontal colorbar above the face-on panel
+    cbar_ax = fig.add_axes([
+        ax_xy.get_position().x0,
+        ax_xy.get_position().y1 + 0.01,
+        ax_xy.get_position().width,
+        0.015,
+    ])
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    sm.set_array([])
+    cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
+    cbar.set_label(r"$\log_{10}\,\Sigma$" + "\n[M$_\\odot$ / kpc$^2$]",
+                   fontsize=14, labelpad=-55)
+    cbar.ax.xaxis.set_label_position("top")
+    cbar.ax.xaxis.tick_top()
+
     fig.suptitle(title, fontsize=18, y=0.98)
 
     if save_path:

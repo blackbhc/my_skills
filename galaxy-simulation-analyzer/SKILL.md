@@ -1,18 +1,66 @@
+---
+name: galaxy-simulation-analyzer
+description: |
+  Python toolkit for analyzing N-body simulation snapshots of disk galaxies.
+  Computes bar strength (m=2), buckling, B/P bulge, disk structure profiles,
+  coordinate transforms, and visualization (face-on/edge-on/3-panel). Built on
+  numpy, scipy, matplotlib, h5py.
+
+  Use when: galaxy simulation analysis, N-body snapshot analysis, bar strength computation, disk galaxy analysis, galaxy morphology, Gadget snapshot, HDF5 snapshot analysis, Fourier m=2 analysis, buckling analysis, B/P bulge, disk scale length fitting, Sersic fitting, galaxy visualization, 星系模拟分析, 棒旋星系, 星系形态学, 傅里叶分析
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Grep
+  - Find
+  - Ls
+---
+
 # Galaxy Simulation Analyzer
 
-A Python toolkit for analyzing N-body simulation snapshots of disk galaxies.
-Built on numpy, scipy, matplotlib, and h5py.
+## Purpose
 
-## Triggers
+Provide a unified Python API for analyzing N-body simulation snapshots of disk galaxies. Cover I/O, preprocessing, coordinate transforms, morphology (bar/buckling/B/P bulge), structure profiles, and visualization in a single toolkit. Agent should use this skill as a code reference and run analyses via Bash/Python, not reproduce the code inline.
 
-Use this skill when the user asks to:
+## Scope
 
-- Analyze a galaxy simulation snapshot (.hdf5, Gadget-style)
-- Compute bar strength (m=2 Fourier mode), buckling, and B/P bulge metrics
-- Generate face-on / edge-on / 3-panel visualizations
-- Fit disk scale length (Rd), scale height (Zd), or Sersic index
-- Transform coordinates (cartesian ↔ cylindrical ↔ spherical)
-- Preprocess snapshots (recenter via shrinking-sphere or most-bound particle, disk alignment)
+### What this skill does
+
+- Load Gadget-style HDF5 snapshots with PartType selection
+- Recenter snapshots (shrinking-sphere COM / most-bound particle) and align disk to +Z
+- Convert coordinates between Cartesian, cylindrical, and spherical frames
+- Compute bar strength via m=2 Fourier amplitude, bar phase angle, and radial A2 profile
+- Detect buckling events and B/P bulge strength
+- Fit exponential disk scale length/height and Sersic index
+- Generate face-on, edge-on, and 3-panel visualizations
+- Provide a single `GalaxyAnalyzer` class as the unified interface
+
+### What this skill does NOT do
+
+- Does not run N-body simulations (use Gadget, Arepo, Gizmo, etc.)
+- Does not perform cosmological analysis (halo finders, merger trees)
+- Does not generate initial conditions
+- Does not provide advanced statistical inference or MCMC fitting
+- Does not replace dedicated visualization software (e.g., yt, pynbody) for general use
+
+## Use When
+
+### Trigger conditions
+
+- User asks to analyze a galaxy simulation snapshot (.hdf5, Gadget-style)
+- User needs bar strength, buckling, or B/P bulge metrics
+- User wants face-on / edge-on / 3-panel visualizations of simulation data
+- User needs disk scale length (Rd), scale height (Zd), or Sersic index fitting
+- User needs coordinate transforms (Cartesian ↔ cylindrical ↔ spherical)
+- User asks to preprocess a snapshot (recenter + disk alignment)
+- User says "星系模拟分析", "分析这个快照", "计算棒强度", "棒旋星系傅里叶分析"
+
+### Do NOT use when
+
+- User just wants to view an existing plot/image (no computation needed)
+- User needs cosmological context (halos, mergers, large-scale structure)
+- User needs generic data exploration (use numpy/scipy directly)
 
 ## Dependencies
 
@@ -43,6 +91,24 @@ galaxy-simulation-analyzer/
     ├── morphology.py    # Bar strength (m=2), buckling, B/P bulge
     ├── structure.py     # Disk scale length / height, Sersic index fitting
     └── vis.py           # Face-on, edge-on, and 3-panel projections
+```
+
+## Inputs
+
+| Input | Required | Description |
+|-------|:--------:|-------------|
+| HDF5 snapshot path | ✅ | Path to Gadget-style .hdf5 file |
+| PartType(s) | ❌ | Default auto-detect; specify `[1, 2]` etc. |
+| Analysis parameters | ❌ | `Rmin`, `Rmax`, `binNum`, `size`, `threshold` etc. |
+
+## Workflow
+
+```text
+1. Load snapshot → load_snapshot(path, part_types)
+2. Preprocess     → preprocess_disk(...)  [recenter + align]
+3. Transform      → car2cyl / car2sph / ...
+4. Analyze        → A2 / getRdHz / fit_sersic / ...
+5. Visualize      → view_snapshot / face_on / edge_on
 ```
 
 ## Quick Start
@@ -197,3 +263,67 @@ fig = ga.edge_on(coords, masses, size=20, binNum=200)           # 3-view (2x2 gr
 
 All visualisation functions accept `cmap`, `title`, `save_path`, `vmin`/`vmax`,
 and `show` arguments.
+
+## Outputs
+
+| Output | Format | Description |
+|--------|--------|-------------|
+| Analysis results | Python dict / ndarray | A2, Rd, Zd, Sersic n, bar phase angle, etc. |
+| Plots | Matplotlib Figure | Face-on, edge-on, 3-panel; save to disk or display |
+| Processed data | ndarray | Translated/rotated coordinates and velocities |
+
+## Examples
+
+### Example 1: Basic bar strength analysis
+
+```
+Input: "Analyze bar strength for snapshot_020.hdf5 using PartType 2"
+Agent:
+  → imports GalaxyAnalyzer
+  → loads snapshot data[2]
+  → preprocesses (recenter + align)
+  → converts to cylindrical
+  → computes A2
+  → visualizes face-on
+Output: A2 value + face-on plot
+```
+
+### Example 2: Full morphology pipeline
+
+```
+Input: "Give me Rd, Zd, A2, and 3-panel view for this snapshot"
+Agent:
+  → same as above + getRdHz + view_snapshot(3-panel)
+Output: Rd (kpc), Zd (kpc), A2, 3-panel plot saved to disk
+```
+
+## Limitations
+
+- Requires snapshot in Gadget-style HDF5 format (not tipsy, ascii, binary)
+- Particle mass resolution limits the smallest measurable bar amplitude (~0.01)
+- Scale length/height fitting assumes axisymmetric exponential disk; deviations in strongly barred galaxies may bias results
+- Visualization uses simple 2D histogram projections; no ray-tracing or dust rendering
+- No built-in support for time-series analysis across multiple snapshots (user must loop externally)
+
+## Checklist
+
+Agent should verify after analysis:
+
+**Input:**
+- [ ] Snapshot path exists and is readable
+- [ ] HDF5 file contains expected PartType groups
+- [ ] Particle arrays have correct shapes (N, 3) or (N,)
+
+**Preprocessing:**
+- [ ] Disk correctly recentered (center ≈ 0 after transform)
+- [ ] Disk angular momentum aligned to +Z (face-on view shows circular distribution)
+
+**Analysis:**
+- [ ] A2 computed at correct radial range (typically 0–2 scale lengths)
+- [ ] Fit parameters (Rd, Sersic n) checked for physical reasonableness
+- [ ] No NaN/inf in profile arrays
+
+**Visualization:**
+- [ ] Bin number appropriate for particle count
+- [ ] Colormap clearly shows density structure
+- [ ] Axes labeled with units

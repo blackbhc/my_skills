@@ -12,7 +12,6 @@ from matplotlib import pyplot as plt
 from scipy.stats import binned_statistic_2d
 from typing import Optional, Tuple
 
-
 def _hist2d_log(
     x: np.ndarray,
     y: np.ndarray,
@@ -61,14 +60,12 @@ def _hist2d_log(
     H_log[mask_ok] = np.log10(stat[mask_ok])
     return H_log
 
-
 def _shared_clim(*images: np.ndarray) -> Tuple[float, float]:
     """Return (vmin, vmax) covering the 0.5-99.5 percentile of all valid pixels."""
     all_vals = np.concatenate([im[np.isfinite(im)] for im in images])
     if len(all_vals) == 0:
         return 0.0, 1.0
     return float(np.percentile(all_vals, 0.5)), float(np.percentile(all_vals, 99.5))
-
 
 def phys2pixel(phys, size, binNum):
     """Convert physical coordinate to pixel index for imshow with extent.
@@ -91,7 +88,6 @@ def phys2pixel(phys, size, binNum):
         Pixel coordinate in [0, binNum - 1].
     """
     return (phys + size) / (2.0 * size) * (binNum - 1.0)
-
 
 def _apply_annotations(ax, annotations, panel):
     """Apply annotation commands to an axes.
@@ -125,7 +121,6 @@ def _apply_annotations(ax, annotations, panel):
         kwargs = ann.get("kwargs", {})
         getattr(ax, func_name)(*args, **kwargs)
 
-
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -144,11 +139,20 @@ def view_snapshot(
     interpolation: str = "none",
     annotations: Optional[list] = None,
 ) -> plt.Figure:
-    """Three-panel projection: face-on (XY) | edge-on (XZ) | edge-on (YZ).
+    """Three-view projection: face-on (XY) + end-on (YZ) + side-on (XZ).
 
-    All panels share the same X-axis direction: the face-on horizontal
-    axis is *X*, and the first edge-on panel (XZ) also places *X* on
-    the vertical axis so the two stay aligned.
+    Layout (2x2 grid, bottom-right hidden for colorbar)::
+
+        +--------+--------+
+        |  XY    |  YZ    |    XY <-> YZ share Y axis (vertical)
+        | face-on| end    |    XY <-> XZ share X axis (horizontal)
+        +--------+--------+
+        |  XZ    |        |
+        | side   | (cbar) |
+        +--------+--------+
+
+    All three panels are mutually axis-aligned so the same physical
+    direction maps to the same screen direction across adjacent panels.
 
     Parameters
     ----------
@@ -168,66 +172,102 @@ def view_snapshot(
     save_path : str or None
     show : bool
     vmin, vmax : float or None
+    annotations : list of dict or None
+        Annotations to draw on specific panels. Each dict::
+
+            {"panel": "face-on", "func": "plot",
+             "args": ([x1, x2], [y1, y2]), "kwargs": {"color": "red"}}
+
+        ``panel`` one of ``"face-on"``, ``"side-on"``, ``"end-on"``;
+        ``func`` is the axes method name; use physical coordinates.
 
     Returns
     -------
     matplotlib.figure.Figure
     """
-    ratio = 0.3
-    binNum_edge = max(int(binNum * ratio), 10)
-
     weights = (masses if masses is not None
                else np.ones(len(coordinates), dtype=np.float32))
 
+    ratio = 0.3
+    binNum_z = max(int(binNum * ratio), 10)
+    rng_xy = (-size, size)
+    rng_z = (-size * ratio, size * ratio)
+
     x, y, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
-    xy_range = (-size, size)
-    z_range = (-size * ratio, size * ratio)
 
-    im_xy = _hist2d_log(y, x, weights, xy_range, xy_range, binNum)
-    im_xz = _hist2d_log(x, z, weights, xy_range, z_range, binNum_edge)
-    im_yz = _hist2d_log(y, z, weights, xy_range, z_range, binNum_edge)
+    # XY - horizontal=X, vertical=Y
+    im_xy = _hist2d_log(y, x, weights, rng_xy, rng_xy, binNum)
+    # XZ - horizontal=X, vertical=Z  (X aligned with XY)
+    im_xz = _hist2d_log(z, x, weights, rng_z, rng_xy, binNum_z)
+    # YZ - horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
+    im_yz = _hist2d_log(y, z, weights, rng_xy, rng_z, binNum_z)
 
-    auto_min, auto_max = _shared_clim(im_xy, im_xz, im_yz)
+    auto_vmin, auto_vmax = _shared_clim(im_xy, im_xz, im_yz)
     if vmin is None:
-        vmin = auto_min
+        vmin = auto_vmin
     if vmax is None:
-        vmax = auto_max
+        vmax = auto_vmax
 
-    fig = plt.figure(figsize=(18, 6))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1, ratio, ratio],
-                          wspace=0.02, hspace=0.02)
+    fig = plt.figure(figsize=(14, 14))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1, ratio],
+                          height_ratios=[1, ratio],
+                          hspace=0.03, wspace=0.03)
 
-    # -- XY (face-on): rows=y (Y axis), cols=x (X axis) --
-    ax_xy = fig.add_subplot(gs[0])
+    # Top-left: XY (face-on)
+    ax_xy = fig.add_subplot(gs[0, 0])
     ax_xy.imshow(im_xy, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size, size])
     ax_xy.set_xlabel("X [kpc]")
     ax_xy.set_ylabel("Y [kpc]")
+    ax_xy.text(0.03, 0.97, "Face-on (XY)", transform=ax_xy.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    # -- XZ: horizontal=Z, vertical=X (X stays vertical, aligned with face-on) --
-    ax_xz = fig.add_subplot(gs[1])
-    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
-                 extent=[-size * ratio, size * ratio, -size, size])
-    ax_xz.set_xlabel("Z [kpc]")
-    ax_xz.set_ylabel("X [kpc]")
-    ax_xz.yaxis.set_label_position("right")
-    ax_xz.yaxis.tick_right()
-
-    # -- YZ: horizontal=Z, vertical=Y --
-    ax_yz = fig.add_subplot(gs[2])
+    # Top-right: YZ (end) - horizontal=Z, vertical=Y  (share Y with XY)
+    ax_yz = fig.add_subplot(gs[0, 1], sharey=ax_xy)
     ax_yz.imshow(im_yz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size * ratio, size * ratio, -size, size])
     ax_yz.set_xlabel("Z [kpc]")
     ax_yz.set_ylabel("Y [kpc]")
     ax_yz.yaxis.set_label_position("right")
     ax_yz.yaxis.tick_right()
+    ax_yz.text(0.03, 0.97, "End (YZ)", transform=ax_yz.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
 
-    if title:
-        fig.suptitle(title, fontsize=18)
+    # Bottom-left: XZ (side) - horizontal=X, vertical=Z  (share X with XY)
+    ax_xz = fig.add_subplot(gs[1, 0], sharex=ax_xy)
+    ax_xz.imshow(im_xz, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
+                 extent=[-size, size, -size * ratio, size * ratio])
+    ax_xz.set_xlabel("X [kpc]")
+    ax_xz.set_ylabel("Z [kpc]")
+    ax_xz.text(0.03, 0.97, "Side (XZ)", transform=ax_xz.transAxes,
+               va="top", ha="left", fontsize=14, color="white",
+               bbox=dict(boxstyle="round,pad=0.3", facecolor="black", alpha=0.5))
+
+    # Bottom-right: hidden (reserved for colorbar)
+    ax_cb = fig.add_subplot(gs[1, 1])
+    ax_cb.set_visible(False)
+
+    # Horizontal colorbar above the face-on panel
+    cbar_ax = fig.add_axes([
+        ax_xy.get_position().x0,
+        ax_xy.get_position().y1 + 0.01,
+        ax_xy.get_position().width,
+        0.015,
+    ])
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    sm.set_array([])
+    cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
+    cbar.set_label(r"$\log_{10}\,\Sigma$" + "\n[M$_\odot$ / kpc$^2$]", fontsize=14, labelpad=-55)
+    cbar.ax.xaxis.set_label_position("top")
+    cbar.ax.xaxis.tick_top()
 
     _apply_annotations(ax_xy, annotations, "face-on")
     _apply_annotations(ax_xz, annotations, "side-on")
     _apply_annotations(ax_yz, annotations, "end-on")
+
+    fig.suptitle(title, fontsize=18, y=0.98)
 
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -236,7 +276,6 @@ def view_snapshot(
     else:
         plt.close(fig)
     return fig
-
 
 def face_on(
     coordinates: np.ndarray,
@@ -296,7 +335,6 @@ def face_on(
     else:
         plt.close(fig)
     return fig
-
 
 def edge_on(
     coordinates: np.ndarray,

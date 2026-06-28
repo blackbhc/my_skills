@@ -56,6 +56,44 @@ def car2cyl(
     return cyl_pos, cyl_vel
 
 
+def cyl2car(
+    coordinates: np.ndarray,
+    velocities: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Transform cylindrical coordinates/velocities to Cartesian.
+
+    Parameters
+    ----------
+    coordinates : (N, 3) ndarray
+        Columns (R, phi, z).
+    velocities : (N, 3) ndarray
+        Columns (V_R, V_phi, V_z).
+
+    Returns
+    -------
+    car_pos : (N, 3) ndarray
+        Columns (x, y, z).
+    car_vel : (N, 3) ndarray
+        Columns (vx, vy, vz).
+    """
+    R, phi, z = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
+    V_R, V_phi, V_z = velocities[:, 0], velocities[:, 1], velocities[:, 2]
+
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    x = R * cos_phi
+    y = R * sin_phi
+    car_pos = np.column_stack((x, y, z))
+
+    vx = V_R * cos_phi - V_phi * sin_phi
+    vy = V_R * sin_phi + V_phi * cos_phi
+    vz = V_z
+    car_vel = np.column_stack((vx, vy, vz))
+
+    return car_pos, car_vel
+
+
 def _inner_product(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Row-wise dot product of two (N, 3) arrays."""
     return np.sum(a * b, axis=1)
@@ -156,7 +194,7 @@ def sph2car(
     return car_pos, car_vel
 
 
-def anisotropy(V_r: np.ndarray, V_phi: np.ndarray, V_theta: np.ndarray) -> float:
+def anisotropy(V_r: np.ndarray, V_phi: np.ndarray, V_theta: np.ndarray):
     """Compute the radial orbital anisotropy parameter.
 
     beta = 1 - (sigma_theta^2 + sigma_phi^2) / (2 * sigma_r^2)

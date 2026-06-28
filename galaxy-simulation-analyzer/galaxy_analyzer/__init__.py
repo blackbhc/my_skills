@@ -149,6 +149,11 @@ class GalaxyAnalyzer:
         return _coords.car2cyl(coordinates, velocities)
 
     @staticmethod
+    def cyl2car(coordinates, velocities):
+        """Cylindrical → Cartesian. See `coords.cyl2car`."""
+        return _coords.cyl2car(coordinates, velocities)
+
+    @staticmethod
     def car2sph(coordinates, velocities):
         """Cartesian → Spherical. See `coords.car2sph`."""
         return _coords.car2sph(coordinates, velocities)

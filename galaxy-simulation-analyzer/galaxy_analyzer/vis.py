@@ -116,6 +116,8 @@ def view_snapshot(
         im_xz[~np.isnan(im_xz)],
         im_yz[~np.isnan(im_yz)],
     ])
+    if len(all_valid) == 0:
+        all_valid = np.array([0.0, 1.0])
     if vmin is None:
         vmin = np.percentile(all_valid, 0.5)
     if vmax is None:

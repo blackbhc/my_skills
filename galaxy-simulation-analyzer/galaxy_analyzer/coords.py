@@ -144,10 +144,9 @@ def sph2car(
     unit_r = np.column_stack((sin_theta * cos_phi,
                                sin_theta * sin_phi,
                                cos_theta))
-    unit_theta = np.column_stack((cos_theta * cos_phi,
-                                   cos_theta * sin_phi,
-                                   -sin_theta))
     unit_phi = np.column_stack((-sin_phi, cos_phi, np.zeros(len(phi))))
+    # Use cross product (consistent with car2sph convention)
+    unit_theta = np.cross(unit_r, unit_phi)
 
     vx = V_r * unit_r[:, 0] + V_theta * unit_theta[:, 0] + V_phi * unit_phi[:, 0]
     vy = V_r * unit_r[:, 1] + V_theta * unit_theta[:, 1] + V_phi * unit_phi[:, 1]

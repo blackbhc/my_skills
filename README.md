@@ -11,6 +11,7 @@ my_skills/
 ├── skill_builder/           # Skill 开发助手（指导如何创建和优化 Skill）
 ├── tokens-auto-specialization/  # 提示词自动专业化
 ├── paper-read-in-depth/     # 深度阅读学术论文（7 步流程，Markdown+HTML 双输出）
+├── galaxy-simulation-analyzer/  # N体盘状星系模拟快照分析工具包
 ├── templates/               # Skill 模板
 ├── skills_setup             # 批量拉取/更新外部 GitHub skills
 ├── tools/                   # 校验与开发工具
@@ -23,7 +24,8 @@ my_skills/
 |-------|------|
 | [skill_builder](skill_builder/SKILL.md) | Skill 开发助手——指导 Agent 设计、开发、优化和维护其他 Skill，确保产出格式规范（含 YAML frontmatter） |
 | [tokens-auto-specialization](tokens-auto-specialization/SKILL.md) | 提示词自动专业化——Agent 持续激活，自动补齐角色/规则/格式/模型适配，输出精简版+顶配版 |
-| [paper-read-in-depth](paper-read-in-depth/SKILL.md) | 深度阅读学术论文——自动获取内容、背景研究、提炼主线与核心证据链、技术细节分析、价值评估，输出结构化 Markdown + HTML 双格式总结
+| [paper-read-in-depth](paper-read-in-depth/SKILL.md) | 深度阅读学术论文——自动获取内容、背景研究、提炼主线与核心证据链、技术细节分析、价值评估，输出结构化 Markdown + HTML 双格式总结 |
+| [galaxy-simulation-analyzer](galaxy-simulation-analyzer/SKILL.md) | N体盘状星系模拟分析——Gadget HDF5 快照加载、坐标系变换、盘面找正与对齐、棒强度(m=2)/buckling/B&P bulge 形态学、指数标长/标高拟合、面密度剖面、Sérsic 指数拟合、3面板可视化
 
 ## 快速开始
 
@@ -58,7 +60,7 @@ node tools/validate.mjs
 ### 一键部署全部 Skill
 
 ```bash
-./skills_setup    # 拉取外部 58 个 skill + 部署本地 3 个 skill
+./skills_setup    # 拉取外部 58 个 skill + 部署本地 4 个 skill
 ```
 
 ### 拉取外部 Skill

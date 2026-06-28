@@ -163,6 +163,8 @@ def face_on(
     save_path: Optional[str] = None,
     show: bool = True,
     interpolation: str = "none",
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
 ) -> plt.Figure:
     """Single face-on (XY) projection.
 
@@ -216,6 +218,8 @@ def edge_on(
     save_path: Optional[str] = None,
     show: bool = True,
     interpolation: str = "none",
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
 ) -> plt.Figure:
     """Three-view projection: face-on (XY) + end-on (YZ) + side-on (XZ).
 
@@ -266,7 +270,11 @@ def edge_on(
     # YZ — horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
     im_yz = _hist2d_log(z, y, weights, rng_z, rng_xy, binNum_z)
 
-    vmin, vmax = _shared_clim(im_xy, im_xz, im_yz)
+    auto_vmin, auto_vmax = _shared_clim(im_xy, im_xz, im_yz)
+    if vmin is None:
+        vmin = auto_vmin
+    if vmax is None:
+        vmax = auto_vmax
 
     fig = plt.figure(figsize=(14, 14))
     gs = fig.add_gridspec(2, 2, width_ratios=[1, ratio],

@@ -281,17 +281,17 @@ class GalaxyAnalyzer:
     @staticmethod
     def face_on(coordinates, masses=None, size=20.0, binNum=200,
                 cmap="jet", title="Face-on View", save_path=None,
-                show=True, interpolation="none"):
+                show=True, interpolation="none", vmin=None, vmax=None):
         """Face-on projection. See `vis.face_on`."""
         return _vis.face_on(
             coordinates, masses, size, binNum, cmap, title, save_path, show,
-            interpolation)
+            interpolation, vmin, vmax)
 
     @staticmethod
     def edge_on(coordinates, masses=None, size=20.0, binNum=200,
                 cmap="jet", title="Edge-on View", save_path=None,
-                show=True, interpolation="none"):
+                show=True, interpolation="none", vmin=None, vmax=None):
         """Edge-on projection. See `vis.edge_on`."""
         return _vis.edge_on(
             coordinates, masses, size, binNum, cmap, title, save_path, show,
-            interpolation)
+            interpolation, vmin, vmax)

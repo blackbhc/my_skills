@@ -115,6 +115,7 @@ def view_snapshot(
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
     interpolation: str = "none",
+    annotations: Optional[list] = None,
 ) -> plt.Figure:
     """Three-panel projection: face-on (XY) | edge-on (XZ) | edge-on (YZ).
 

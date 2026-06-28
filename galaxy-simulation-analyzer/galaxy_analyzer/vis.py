@@ -157,9 +157,9 @@ def view_snapshot(
     xy_range = (-size, size)
     z_range = (-size * ratio, size * ratio)
 
-    im_xy = _hist2d_log(x, y, weights, xy_range, xy_range, binNum)
-    im_xz = _hist2d_log(z, x, weights, z_range, xy_range, binNum_edge)
-    im_yz = _hist2d_log(z, y, weights, z_range, xy_range, binNum_edge)
+    im_xy = _hist2d_log(y, x, weights, xy_range, xy_range, binNum)
+    im_xz = _hist2d_log(x, z, weights, xy_range, z_range, binNum_edge)
+    im_yz = _hist2d_log(y, z, weights, xy_range, z_range, binNum_edge)
 
     auto_min, auto_max = _shared_clim(im_xy, im_xz, im_yz)
     if vmin is None:
@@ -171,7 +171,7 @@ def view_snapshot(
     gs = fig.add_gridspec(1, 3, width_ratios=[1, ratio, ratio],
                           wspace=0.02, hspace=0.02)
 
-    # -- XY (face-on): horizontal=X, vertical=Y --
+    # -- XY (face-on): rows=y (Y axis), cols=x (X axis) --
     ax_xy = fig.add_subplot(gs[0])
     ax_xy.imshow(im_xy, origin="lower", cmap=cmap, interpolation=interpolation, vmin=vmin, vmax=vmax,
                  extent=[-size, size, -size, size])
@@ -251,7 +251,7 @@ def face_on(
                else np.ones(len(coordinates), dtype=np.float32))
     rng = (-size, size)
 
-    im = _hist2d_log(coordinates[:, 0], coordinates[:, 1],
+    im = _hist2d_log(coordinates[:, 1], coordinates[:, 0],
                      weights, rng, rng, binNum)
 
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -332,7 +332,7 @@ def edge_on(
     # XZ - horizontal=X, vertical=Z  (X aligned with XY)
     im_xz = _hist2d_log(z, x, weights, rng_z, rng_xy, binNum_z)
     # YZ - horizontal=Z, vertical=Y  (Y aligned with XY, Z with XZ)
-    im_yz = _hist2d_log(z, y, weights, rng_z, rng_xy, binNum_z)
+    im_yz = _hist2d_log(y, z, weights, rng_xy, rng_z, binNum_z)
 
     auto_vmin, auto_vmax = _shared_clim(im_xy, im_xz, im_yz)
     if vmin is None:
